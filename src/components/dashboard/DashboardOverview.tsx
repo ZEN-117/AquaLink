@@ -47,15 +47,13 @@ const DashboardOverview = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-aqua rounded-xl p-6 text-white animate-scale-in">
+      <div className="bg-gradient-aqua rounded-xl p-6 text-primary animate-scale-in">
         <h1 className="text-2xl font-bold mb-2">Welcome back, John!</h1>
         <p className="text-aqua-light">
           Your aquatic business is swimming along nicely. Here's what's happening today.
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <Card key={stat.title} className="hover-scale animate-fade-in border-aqua/10" style={{ animationDelay: `${index * 100}ms` }}>
@@ -89,7 +87,7 @@ const DashboardOverview = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button className="w-full justify-start bg-gradient-aqua hover:opacity-90">
+            <Button className="w-full bg-gradient-to-r justify-start from-primary to-black text-white hover:opacity-90 transition-all duration-300 " >
               <Plus className="w-4 h-4 mr-2" />
               Add New Gig
             </Button>

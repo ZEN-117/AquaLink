@@ -77,11 +77,11 @@ export function AppSidebar() {
         <div className="p-4 border-b border-aqua/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-aqua rounded-lg flex items-center justify-center">
-              <Fish className="w-5 h-5 text-white" />
+              <Fish className="w-5 h-5 text-primary" />
             </div>
             {!collapsed && (
               <div>
-                <h2 className="font-bold text-lg text-foreground">AquaFlow</h2>
+                <h2 className="font-bold text-lg text-foreground">AquaLink</h2>
                 <p className="text-xs text-muted-foreground">Dashboard</p>
               </div>
             )}
@@ -96,37 +96,35 @@ export function AppSidebar() {
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="hover-scale">
-                    <NavLink 
-                      to={item.url} 
-                      end 
-                      className={getNavCls}
-                      title={collapsed ? item.title : undefined}
-                    >
-                      <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!collapsed && (
-                        <div className="flex-1 min-w-0">
-                          <span className="block text-sm font-medium">
-                            {item.title}
-                          </span>
-                          <span className="block text-xs text-muted-foreground truncate">
-                            {item.description}
-                          </span>
-                        </div>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
+                  <NavLink
+                    to={item.url}
+                    end
+                    title={collapsed ? item.title : undefined}
+                    className={({ isActive }) =>
+                      `flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                      ${isActive ? "bg-aqua/10 text-aqua font-medium border-r-2 border-aqua" : "hover:bg-aqua/10 hover:text-aqua"}`
+                    }
+                  >
+                    <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!collapsed && (
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium">{item.title}</span>
+                        <span className="block text-xs text-muted-foreground truncate">{item.description}</span>
+                      </div>
+                    )}
+                  </NavLink>
                 </SidebarMenuItem>
+
               ))}
-              
+
               {/* Logout Button */}
               <SidebarMenuItem>
                 <SidebarMenuButton 
                   onClick={handleLogout}
-                  className="hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
+                  className="flex items-center p-3 rounded-lg min-h-[56px] hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
                   title={collapsed ? "Logout" : undefined}
                 >
                   <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
@@ -142,6 +140,8 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
+
+
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>

@@ -128,8 +128,7 @@ const SignUp = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-aqua hover:opacity-90 transition-all duration-300 hover-scale"
-              >
+                className="w-full bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105" >
                 Create Account
               </Button>
             </form>

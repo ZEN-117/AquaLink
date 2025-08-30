@@ -90,16 +90,15 @@ const SignIn = () => {
               <div className="flex items-center justify-between">
                 <Link 
                   to="/forgot-password" 
-                  className="text-sm text-aqua hover:text-aqua-light transition-colors story-link"
+                  className="text-sm text-aqua  hover:text-aqua-light transition-colors story-link"
                 >
                   Forgot password?
                 </Link>
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-aqua hover:opacity-90 transition-all duration-300 hover-scale"
-              >
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105">
                 Sign In
               </Button>
             </form>

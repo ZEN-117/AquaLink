@@ -145,10 +145,13 @@ const UserProfile = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
-              <Button className="bg-gradient-aqua hover:opacity-90">
+              <Button className="bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105" >
                 Save Changes
               </Button>
-              <Button variant="outline" className="border-aqua/20 hover:bg-aqua/10">
+              <Button
+                variant="outline"
+                className="border-aqua/20 hover:bg-aqua/60 transition-transform duration-200 hover:scale-105"
+              >
                 Cancel
               </Button>
             </div>
