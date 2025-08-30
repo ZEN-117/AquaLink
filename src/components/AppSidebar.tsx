@@ -18,7 +18,8 @@ import {
   BarChart3, 
   LogOut,
   ShoppingBag,
-  HouseIcon
+  HouseIcon,
+  Fish
 } from "lucide-react";
 
 const menuItems = [
@@ -79,21 +80,20 @@ export function AppSidebar() {
       className={`${collapsed ? "w-14" : "w-64"} transition-all duration-300 border-r border-aqua/10`}
     >
       <SidebarContent className="bg-gradient-to-b from-background to-background/95">
- 
+
           {/* Logo Section */}
-          <div className="p-4 border-b border-aqua/10 flex flex-col items-start">
-            <NavLink to="/dashboard" className="w-36 h-auto">
-              <img 
-                src="/src/assets/logo.png" 
-                alt="AquaLink Logo" 
-                className="w-full h-auto object-contain"
-              />
-            </NavLink>
-            {!collapsed && (
-              <p className="mt-1 ml-1 block text-sm font-medium">
-                Dashboard
-              </p>
-            )}
+          <div className="p-4 border-b border-aqua/10">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-aqua rounded-lg flex items-center justify-center">
+                <Fish className="w-5 h-5 text-primary" />
+              </div>
+              {!collapsed && (
+                <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
+                  <h2 className="font-bold text-lg text-foreground">AquaLink</h2>
+                  <p className="text-xs text-muted-foreground">Dashboard</p>
+                </NavLink>
+              )}
+            </div>
           </div>
         <SidebarGroup
           className="px-2"
