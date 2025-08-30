@@ -99,10 +99,10 @@ const HeroSlider = () => {
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-500">
-                  <Button variant="ocean" size="lg" className="text-lg px-8 py-3">
+                  <Button variant="black" size="lg" className="text-lg px-8 py-3">
                     {slide.cta}
                   </Button>
-                  <Button variant="aqua" size="lg" className="text-lg px-8 py-3">
+                  <Button variant="ocean" size="lg" className="text-lg px-8 py-3">
                     Watch Demo
                   </Button>
                 </div>

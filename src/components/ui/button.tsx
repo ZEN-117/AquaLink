@@ -21,6 +21,7 @@ const buttonVariants = cva(
         ocean: "bg-gradient-to-r from-primary to-black text-primary-foreground hover:shadow-[0_0_30px_hsl(var(--primary-glow)/0.5)] hover:scale-105 transition-all duration-300",
         wave: "bg-gradient-to-r from-accent to-primary text-primary-foreground hover:bg-gradient-to-l hover:shadow-[0_5px_20px_-5px_hsl(var(--accent)/0.4)] transition-all duration-500",
         aqua: "bg-primary/80 text-accent  border border-accent/30 hover:bg-black hover:text-background hover:shadow-[0_0_25px_hsl(var(--accent)/0.3)] backdrop-blur-sm",
+        black: "bg-black text-primary-foreground hover:shadow-[0_0_30px_hsl(var(--primary-glow)/0.5)] hover:scale-105 transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",
