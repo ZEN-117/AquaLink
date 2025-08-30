@@ -35,10 +35,13 @@ const Dashboard = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="hover:bg-aqua/10 hover:text-aqua transition-colors"
+                  className="hover:bg-aqua/10 hover:text-aqua transition-colors p-2"
                 >
-                  <Bell className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-black" />
+                  </div>
                 </Button>
+
                 <div className="w-8 h-8 rounded-full bg-gradient-aqua flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JD</span>
                 </div>

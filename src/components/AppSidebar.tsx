@@ -103,39 +103,54 @@ export function AppSidebar() {
                     to={item.url}
                     end
                     title={collapsed ? item.title : undefined}
-                    className={({ isActive }) =>
-                      `flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
-                      ${isActive ? "bg-aqua/10 text-aqua font-medium border-r-2 border-aqua" : "hover:bg-aqua/10 hover:text-aqua"}`
-                    }
                   >
-                    <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                    {!collapsed && (
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium">{item.title}</span>
-                        <span className="block text-xs text-muted-foreground truncate">{item.description}</span>
+                    {({ isActive }) => (
+                      <div
+                        className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                          ${isActive 
+                            ? "bg-gradient-to-r from-primary to-black text-background font-medium"   
+                            : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
+                      >
+                        <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                        {!collapsed && (
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-sm font-medium">{item.title}</span>
+                            <span
+                              className={`block text-xs truncate ${
+                                isActive ? "text-white" : "text-primary"
+                              }`}
+                            >
+                              {item.description}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </NavLink>
+
+
                 </SidebarMenuItem>
 
               ))}
 
               {/* Logout Button */}
               <SidebarMenuItem>
-                <SidebarMenuButton 
+                <SidebarMenuButton
                   onClick={handleLogout}
-                  className="flex items-center p-3 rounded-lg min-h-[56px] hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
+                  className="flex items-center p-3 rounded-lg min-h-[56px] text-red-500  hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
                   title={collapsed ? "Logout" : undefined}
                 >
-                  <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
-                  {!collapsed && (
-                    <div className="flex-1 min-w-0">
-                      <span className="block text-sm font-medium">Logout</span>
-                      <span className="block text-xs text-muted-foreground">
-                        Sign out of your account
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center w-full">
+                    <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                    {!collapsed && (
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium">Logout</span>
+                        <span className="text-red-500 block text-xs text-muted-foreground">
+                          Sign out of your account
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
