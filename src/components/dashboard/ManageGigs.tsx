@@ -48,11 +48,11 @@ const ManageGigs = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-500/10 text-green-500";
+        return "bg-green-500/90 text-white ";
       case "Out of Stock":
-        return "bg-red-500/10 text-red-500";
+        return "bg-red-500/90 text-white ";
       default:
-        return "bg-gray-500/10 text-gray-500";
+        return "bg-gray-500/10 text-gray-500 ";
     }
   };
 
@@ -150,7 +150,7 @@ const ManageGigs = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button className="bg-gradient-aqua hover:opacity-90">
+              <Button className="bg-gradient-to-r from-primary to-black hover:opacity-90">
                 Create Gig
               </Button>
               <Button 

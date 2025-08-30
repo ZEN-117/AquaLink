@@ -84,7 +84,7 @@ const FinanceManagement = () => {
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
-          <Button className="bg-gradient-aqua hover:opacity-90">
+          <Button className="bg-gradient-to-r from-primary to-black hover:opacity-90">
             <Wallet className="w-4 h-4 mr-2" />
             Withdraw Funds
           </Button>

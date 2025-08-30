@@ -23,11 +23,11 @@ const UserProfile = () => {
             <div className="relative mx-auto">
               <Avatar className="w-24 h-24 mx-auto">
                 <AvatarImage src="/placeholder-avatar.jpg" />
-                <AvatarFallback className="bg-gradient-aqua text-white text-xl">JD</AvatarFallback>
+                <AvatarFallback className="bg-accent text-white text-xl">JD</AvatarFallback>
               </Avatar>
               <Button 
                 size="sm" 
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-aqua hover:bg-aqua-dark"
+                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-black hover:bg-aqua-dark"
               >
                 <Camera className="w-4 h-4" />
               </Button>
@@ -62,8 +62,12 @@ const UserProfile = () => {
             
             <div className="pt-4 border-t border-aqua/10">
               <div className="flex flex-wrap gap-2">
-                <Badge className="bg-aqua/10 text-aqua">Verified Seller</Badge>
-                <Badge className="bg-green-500/10 text-green-500">Top Rated</Badge>
+                <Badge className="bg-gradient-to-r from-primary to-aqua text-white">
+                  Verified Seller
+                </Badge>
+                <Badge className="bg-gradient-to-r from-green-400 to-green-600 text-white">
+                  Top Rated
+                </Badge>
               </div>
             </div>
           </CardContent>
