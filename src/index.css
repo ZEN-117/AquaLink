@@ -2,95 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Aquatic-themed Design System for Guppy Fish Distribution */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Ocean-inspired color palette */
+    --background: 210 100% 98%;
+    --foreground: 210 100% 8%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 210 100% 99%;
+    --card-foreground: 210 100% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 210 100% 99%;
+    --popover-foreground: 210 100% 8%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Deep ocean blues */
+    --primary: 210 100% 45%;
+    --primary-foreground: 210 100% 98%;
+    --primary-glow: 200 100% 65%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Aqua secondary tones */
+    --secondary: 195 100% 85%;
+    --secondary-foreground: 210 100% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Subtle water tones */
+    --muted: 200 50% 92%;
+    --muted-foreground: 210 50% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Bright aqua accents */
+    --accent: 180 100% 70%;
+    --accent-foreground: 210 100% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Coral warning colors */
+    --destructive: 15 100% 60%;
+    --destructive-foreground: 210 100% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Subtle borders like water ripples */
+    --border: 200 30% 88%;
+    --input: 200 30% 90%;
+    --ring: 210 100% 45%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Water-inspired gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-wave: linear-gradient(90deg, hsl(var(--accent)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--primary)) 100%);
+    --gradient-depth: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Aquatic shadows */
+    --shadow-depth: 0 10px 40px -10px hsl(var(--primary) / 0.3);
+    --shadow-float: 0 5px 20px -5px hsl(var(--accent) / 0.4);
+    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.5);
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Smooth water-like transitions */
+    --transition-wave: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-ripple: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Deep ocean night theme */
+    --background: 220 40% 8%;
+    --foreground: 200 100% 92%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 40% 10%;
+    --card-foreground: 200 100% 90%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 40% 10%;
+    --popover-foreground: 200 100% 92%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 200 100% 60%;
+    --primary-foreground: 220 40% 8%;
+    --primary-glow: 180 100% 75%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 40% 15%;
+    --secondary-foreground: 200 100% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 30% 18%;
+    --muted-foreground: 200 50% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 220 40% 8%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 15 100% 55%;
+    --destructive-foreground: 200 100% 92%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 220 30% 20%;
+    --input: 220 30% 18%;
+    --ring: 200 100% 60%;
+
+    --gradient-ocean: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-wave: linear-gradient(90deg, hsl(var(--accent)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--primary)) 100%);
+    --gradient-depth: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
   }
 }
 
@@ -100,6 +102,75 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
+  }
+}
+
+@layer components {
+  /* Aquatic animations */
+  .wave-animation {
+    background: var(--gradient-wave);
+    background-size: 400% 400%;
+    animation: wave-flow 8s ease-in-out infinite;
+  }
+
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .ripple-effect {
+    transition: var(--transition-ripple);
+  }
+
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--gradient-ocean);
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+}
+
+@keyframes wave-flow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0.8;
   }
 }
