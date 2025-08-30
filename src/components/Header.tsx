@@ -66,12 +66,14 @@ const Header = () => {
 
           {/* Right - User Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-foreground">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
+            <Button variant="ghost" size="sm" className="text-foreground" asChild>
+              <Link to="/signin">
+                <User className="h-4 w-4 mr-2" />
+                Sign In
+              </Link>
             </Button>
-            <Button variant="ocean" size="sm">
-              Sign Up
+            <Button variant="ocean" size="sm" asChild>
+              <Link to="/signup">Sign Up</Link>
             </Button>
           </div>
 
@@ -109,12 +111,14 @@ const Header = () => {
                 </div>
               ))}
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-                <Button variant="ghost" size="sm" className="justify-start">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
+                <Button variant="ghost" size="sm" className="justify-start" asChild>
+                  <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Link>
                 </Button>
-                <Button variant="ocean" size="sm">
-                  Sign Up
+                <Button variant="ocean" size="sm" asChild>
+                  <Link to="/signup" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
                 </Button>
               </div>
             </nav>
