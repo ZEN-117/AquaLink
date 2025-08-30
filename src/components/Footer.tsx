@@ -1,7 +1,20 @@
 import { Fish, Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleScroll = (id: string) => {
+    if (location.pathname !== "/") {
+      
+      navigate("/", { state: { scrollTo: id } });
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="bg-gradient-to-t from-secondary/20 to-background border-t border-border">
       <div className="container mx-auto px-4 py-12">
@@ -10,8 +23,8 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <Fish className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                AquaFlow
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
+                AquaLink
               </span>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md">
@@ -27,30 +40,30 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
+            <h3 className="font-semibold text-xl text-foreground mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/" className="font-semibold text-muted-foreground hover:text-primary transition-colors">
                   Home
                 </Link>
               </li>
               <li>
                 <button 
-                  onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => handleScroll('about')}
+                  className="font-semibold text-muted-foreground hover:text-primary transition-colors"
                 >
                   About Us
                 </button>
               </li>
               <li>
-                <Link to="/marketplace" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/marketplace" className="font-semibold text-muted-foreground hover:text-primary transition-colors">
                   Marketplace
                 </Link>
               </li>
               <li>
                 <button 
-                  onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  onClick={() => handleScroll('contact')}
+                  className="font-semibold text-muted-foreground hover:text-primary transition-colors"
                 >
                   Contact Us
                 </button>
@@ -60,19 +73,19 @@ const Footer = () => {
 
           {/* Services */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Services</h3>
+            <h3 className="font-semibold text-xl text-foreground mb-4">Services</h3>
             <ul className="space-y-2 text-muted-foreground">
-              <li>Stock Management</li>
-              <li>Live Fish Monitoring</li>
-              <li>Quality Assurance</li>
-              <li>Distribution Network</li>
+              <li className="font-semibold">Stock Management</li>
+              <li className="font-semibold">Live Fish Monitoring</li>
+              <li className="font-semibold">Quality Assurance</li>
+              <li className="font-semibold">Distribution Network</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-muted-foreground text-sm">
-            © 2024 AquaFlow. All rights reserved.
+            © 2025 AquaLink. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">

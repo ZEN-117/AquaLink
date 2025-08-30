@@ -34,7 +34,7 @@ const AboutSection = () => {
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
                 About AquaFlow
               </span>
             </h2>
@@ -78,9 +78,11 @@ const AboutSection = () => {
                 </div>
               </div>
 
-              <Button variant="ocean" size="lg" className="mt-6">
-                Learn More About Our Process
-              </Button>
+              <a href="#contact">
+                <Button variant="ocean" size="lg" className="mt-6">
+                  Learn More About Our Process
+                </Button>
+              </a>
             </div>
 
             {/* Right Content - Features */}

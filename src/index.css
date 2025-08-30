@@ -2,11 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Aquatic-themed Design System for Guppy Fish Distribution */
+html {
+  scroll-behavior: smooth;
+}
 
 @layer base {
   :root {
-    /* Ocean-inspired color palette */
+    /* Ocean*/
     --background: 210 100% 98%;
     --foreground: 210 100% 8%;
 
@@ -16,51 +18,51 @@
     --popover: 210 100% 99%;
     --popover-foreground: 210 100% 8%;
 
-    /* Deep ocean blues */
+    /* ocean blues */
     --primary: 210 100% 45%;
     --primary-foreground: 210 100% 98%;
     --primary-glow: 200 100% 65%;
 
-    /* Aqua secondary tones */
+    /* secondary */
     --secondary: 195 100% 85%;
     --secondary-foreground: 210 100% 15%;
 
-    /* Subtle water tones */
+    /* water  */
     --muted: 200 50% 92%;
     --muted-foreground: 210 50% 40%;
 
-    /* Bright aqua accents */
+    /* Bright accents */
     --accent: 180 100% 70%;
     --accent-foreground: 210 100% 10%;
 
-    /* Coral warning colors */
+    /* warning colors */
     --destructive: 15 100% 60%;
     --destructive-foreground: 210 100% 98%;
 
-    /* Subtle borders like water ripples */
+    /* borders*/
     --border: 200 30% 88%;
     --input: 200 30% 90%;
     --ring: 210 100% 45%;
 
     --radius: 1rem;
 
-    /* Water-inspired gradients */
+    /* Water gradients */
     --gradient-ocean: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-wave: linear-gradient(90deg, hsl(var(--accent)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--primary)) 100%);
     --gradient-depth: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
 
-    /* Aquatic shadows */
+    /* shadows */
     --shadow-depth: 0 10px 40px -10px hsl(var(--primary) / 0.3);
     --shadow-float: 0 5px 20px -5px hsl(var(--accent) / 0.4);
     --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.5);
 
-    /* Smooth water-like transitions */
+    /* transitions */
     --transition-wave: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-ripple: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    /* Deep ocean night theme */
+    /* night theme */
     --background: 220 40% 8%;
     --foreground: 200 100% 92%;
 
@@ -107,7 +109,7 @@
 }
 
 @layer components {
-  /* Aquatic animations */
+  /* animations */
   .wave-animation {
     background: var(--gradient-wave);
     background-size: 400% 400%;
@@ -126,7 +128,7 @@
     box-shadow: var(--shadow-glow);
   }
 
-  /* Custom scrollbar */
+  /* scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
   }

@@ -9,7 +9,7 @@ const Header = () => {
 
   const scrollToSection = (sectionId: string) => {
     if (location.pathname !== "/") {
-      window.location.href = `/#${sectionId}`;
+      navigate("/", { state: { scrollTo: sectionId } });
     } else {
       const element = document.getElementById(sectionId);
       element?.scrollIntoView({ behavior: "smooth" });
@@ -59,8 +59,8 @@ const Header = () => {
               <Fish className="h-8 w-8 text-primary group-hover:text-accent transition-colors duration-300" />
               <div className="absolute inset-0 bg-primary/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-500"></div>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              AquaFlow
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
+              AquaLink
             </span>
           </Link>
 
