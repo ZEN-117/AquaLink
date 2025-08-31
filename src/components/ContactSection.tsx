@@ -9,7 +9,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    details: "info@aquaflow.com",
+    details: "info@aqualink.com",
     subtitle: "Get in touch via email"
   },
   {

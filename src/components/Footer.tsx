@@ -33,7 +33,7 @@ const Footer = () => {
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 text-primary" />
-                <span>info@aquaflow.com</span>
+                <span>info@aqualink.com</span>
               </div>
             </div>
           </div>
