@@ -67,9 +67,9 @@ const Header = () => {
 
           {/* User actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-foreground" asChild>
+            <Button variant="black" size="sm" className="text-foreground text-white" asChild>
               <Link to="/signin">
-                <User className="h-4 w-4 mr-2" />
+                <User className="h-4 w-4 mr-2 text-white" />
                 Sign In
               </Link>
             </Button>
