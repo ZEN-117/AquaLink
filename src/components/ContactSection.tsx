@@ -85,7 +85,7 @@ const ContactSection = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
+                      <label htmlFor="name" className="block text-m font-medium text-foreground mb-2">
                         Your Name
                       </label>
                       <Input
@@ -99,7 +99,7 @@ const ContactSection = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                      <label htmlFor="email" className="block text-m font-medium text-foreground mb-2">
                         Email Address
                       </label>
                       <Input
@@ -116,7 +116,7 @@ const ContactSection = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
+                    <label htmlFor="subject" className="block text-m font-medium text-foreground mb-2">
                       Subject
                     </label>
                     <Input
@@ -131,7 +131,7 @@ const ContactSection = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
+                    <label htmlFor="message" className="block text-m font-medium text-foreground mb-2">
                       Message
                     </label>
                     <Textarea
@@ -153,7 +153,7 @@ const ContactSection = () => {
               </CardContent>
             </Card>
 
-            {/* Contact Information */}
+            {/* Contact information */}
             <div className="space-y-6">
               {contactInfo.map((info, index) => (
                 <Card
@@ -184,13 +184,13 @@ const ContactSection = () => {
                 </Card>
               ))}
 
-              {/* Additional Info */}
+              {/* Additional info */}
               <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-3">
                     Quick Response Guarantee
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-lg text-muted-foreground ">
                     We typically respond to all inquiries within 2-4 hours during business hours. 
                     For urgent matters regarding fish health or delivery, please call us directly.
                   </p>

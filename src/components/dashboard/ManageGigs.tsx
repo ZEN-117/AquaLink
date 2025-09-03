@@ -66,7 +66,7 @@ const ManageGigs = () => {
         </div>
         <Button 
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
+          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale "
         >
           <Plus className="w-4 h-4 mr-2" />
           Add New Gig

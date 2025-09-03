@@ -123,7 +123,7 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero Section */}
+      {/* Hero  */}
       <section className="pt-24 pb-12 bg-gradient-to-br from-primary/10 via-background to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -161,7 +161,7 @@ const Marketplace = () => {
                   </div>
                 </div>
 
-                {/* Category Filter */}
+                {/* Category  */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Category
@@ -180,7 +180,7 @@ const Marketplace = () => {
                   </Select>
                 </div>
 
-                {/* Rarity Filter */}
+                {/* Rarity  */}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Rarity

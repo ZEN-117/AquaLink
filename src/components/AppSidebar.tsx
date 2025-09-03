@@ -77,94 +77,111 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-14" : "w-64"} transition-all duration-300 border-r border-aqua/10`}
+      className={`${collapsed ? "w-14" : "w-64"} transition-all duration-300 border-r border-aqua/10 flex flex-col`}
     >
-      <SidebarContent className="bg-gradient-to-b from-background to-background/95">
-
-          {/* Logo Section */}
-          <div className="p-4 border-b border-aqua/10">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-aqua rounded-lg flex items-center justify-center">
-                <Fish className="w-5 h-5 text-primary" />
-              </div>
-              {!collapsed && (
-                <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
-                  <h2 className="font-bold text-lg text-foreground">AquaLink</h2>
-                  <p className="text-xs text-muted-foreground">Dashboard</p>
-                </NavLink>
-              )}
+      <SidebarContent className="bg-gradient-to-b from-background to-background/95 flex flex-col flex-1">
+        
+        {/* Logo Section */}
+        <div className="p-4 border-b border-aqua/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-aqua rounded-lg flex items-center justify-center">
+              <Fish className="w-5 h-5 text-primary" />
             </div>
+            {!collapsed && (
+              <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
+                <h2 className="font-bold text-lg text-foreground">AquaLink</h2>
+                <p className="text-xs text-muted-foreground">Dashboard</p>
+              </NavLink>
+            )}
           </div>
-        <SidebarGroup
-          className="px-2"
-        >
+        </div>
+
+        {/* Main Management Menu */}
+        <SidebarGroup className="px-2 flex-1">
           <SidebarGroupLabel className="text-aqua font-medium px-2 py-2">
             {!collapsed && "Management"}
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <NavLink
-                    to={item.url}
-                    end
-                    title={collapsed ? item.title : undefined}
+              {menuItems
+                .filter((item) => item.title !== "Back to Home") // remove "Back to Home" from main
+                .map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <NavLink to={item.url} end>
+                      {({ isActive }) => (
+                        <div
+                          className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                            ${isActive
+                              ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                              : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
+                        >
+                          <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                          {!collapsed && (
+                            <div className="flex-1 min-w-0">
+                              <span className="block text-l font-medium">{item.title}</span>
+                              <span
+                                className={`block text-sm truncate ${
+                                  isActive ? "text-white" : "text-primary"
+                                }`}
+                              >
+                                {item.description}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </NavLink>
+                  </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Footer Actions (bottom pinned) */}
+        <div className="border-t border-aqua/10 p-2">
+          <SidebarMenu className="space-y-2">
+            {/* Back to Home */}
+            <SidebarMenuItem>
+              <NavLink to="/" end>
+                {({ isActive }) => (
+                  <div
+                    className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                      ${isActive
+                        ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                        : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
                   >
-                    {({ isActive }) => (
-                      <div
-                        className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
-                          ${isActive 
-                            ? "bg-gradient-to-r from-primary to-black text-background font-medium"   
-                            : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
-                      >
-                        <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                        {!collapsed && (
-                          <div className="flex-1 min-w-0">
-                            <span className="block text-sm font-medium">{item.title}</span>
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive ? "text-white" : "text-primary"
-                              }`}
-                            >
-                              {item.description}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </NavLink>
-
-
-                </SidebarMenuItem>
-
-              ))}
-
-              {/* Logout Button */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={handleLogout}
-                  className="flex items-center p-3 rounded-lg min-h-[56px] text-red-500  hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
-                  title={collapsed ? "Logout" : undefined}
-                >
-                  <div className="flex items-center w-full">
-                    <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <HouseIcon className="w-5 h-5 mr-3 flex-shrink-0" />
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium">Logout</span>
-                        <span className="text-red-500 block text-xs text-muted-foreground">
-                          Sign out of your account
-                        </span>
+                        <span className="block text-sm font-medium">Back to Home</span>
+                        <span className="block text-xs text-primary">Visit home page</span>
                       </div>
                     )}
                   </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
+                )}
+              </NavLink>
+            </SidebarMenuItem>
 
-
-        </SidebarGroup>
+            {/* Logout Button */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                className="flex items-center p-3 rounded-lg min-h-[56px] text-red-500 hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 hover-scale cursor-pointer"
+              >
+                <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                {!collapsed && (
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium">Logout</span>
+                    <span className="text-red-500 block text-xs text-muted-foreground">
+                      Sign out of your account
+                    </span>
+                  </div>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   );

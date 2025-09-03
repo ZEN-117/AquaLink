@@ -128,7 +128,16 @@ export default {
 				'wave-flow': 'wave-flow 8s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'fade-in-up': 'fade-in-up 0.6s ease-out',
-				'slide-in-left': 'slide-in-left 0.8s ease-out'
+				'slide-in-left': 'slide-in-left 0.8s ease-out',
+				'pulse-slow': 'pulse 5s infinite',
+				'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+				'bounce-slow': 'bounce 3s infinite',
+				'spin-slow': 'spin 4s linear infinite',
+				'spin-fast': 'spin 0.8s linear infinite',
+				'shimmer': 'shimmer 2s linear infinite',
+				'scale-up': 'scale-up 0.5s ease-out',
+				'scale-down': 'scale-down 0.5s ease-in',
+				'tilt': 'tilt 2s infinite ease-in-out',
 			}
 		}
 	},

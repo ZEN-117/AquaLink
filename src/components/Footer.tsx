@@ -20,13 +20,16 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo */}
+          
           <div className="col-span-1 md:col-span-2">
+            <Link to="/" className="flex items-center space-x-2 mb-6">
             <div className="flex items-center space-x-2 mb-4">
               <Fish className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
                 AquaLink
               </span>
             </div>
+            </Link>
             <p className="text-muted-foreground mb-6 max-w-md">
               Your trusted partner in premium guppy fish distribution. We provide the finest quality fish with advanced stock management and real-time monitoring systems.
             </p>
