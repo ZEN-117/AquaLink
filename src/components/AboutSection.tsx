@@ -30,7 +30,7 @@ const AboutSection = () => {
   return (
     <section id="about" className="py-20 bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full mx-auto">
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -51,7 +51,7 @@ const AboutSection = () => {
                 Revolutionizing Fish Distribution
               </h3>
               <p className="text-lg text-muted-foreground">
-                At AquaFlow, we combine traditional aquaculture expertise with cutting-edge technology to deliver the finest guppy fish to enthusiasts worldwide. Our advanced monitoring systems ensure optimal health and quality at every stage of the distribution process.
+                At AquaLink, we combine traditional aquaculture expertise with cutting-edge technology to deliver the finest guppy fish to enthusiasts worldwide. Our advanced monitoring systems ensure optimal health and quality at every stage of the distribution process.
               </p>
               
               <div className="space-y-4">

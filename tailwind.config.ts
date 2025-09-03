@@ -14,10 +14,13 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1400px'
+				'2xl': '1480px'
 			}
 		},
 		extend: {
+			// fontSize: {
+			// base: '18px',
+			// },
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

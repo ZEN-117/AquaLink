@@ -80,7 +80,7 @@ const UserProfile = () => {
             <CardDescription>Update your personal information and preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Personal Information */}
+            {/* Personal info */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-foreground">Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -89,7 +89,7 @@ const UserProfile = () => {
                   <Input 
                     id="firstName" 
                     defaultValue="John"
-                    className="border-aqua/20 focus:border-aqua"
+                    className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
                 <div className="space-y-2">
@@ -97,7 +97,7 @@ const UserProfile = () => {
                   <Input 
                     id="lastName" 
                     defaultValue="Doe"
-                    className="border-aqua/20 focus:border-aqua"
+                    className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
               </div>
@@ -108,7 +108,7 @@ const UserProfile = () => {
                   id="email" 
                   type="email"
                   defaultValue="john.doe@email.com"
-                  className="border-aqua/20 focus:border-aqua"
+                  className="border-aqua/20 focus:border-aqua text-base"
                 />
               </div>
               
@@ -118,7 +118,7 @@ const UserProfile = () => {
                   <Input 
                     id="phone" 
                     defaultValue="+1 (555) 123-4567"
-                    className="border-aqua/20 focus:border-aqua"
+                    className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
                 <div className="space-y-2">
@@ -126,7 +126,7 @@ const UserProfile = () => {
                   <Input 
                     id="location" 
                     defaultValue="California, USA"
-                    className="border-aqua/20 focus:border-aqua"
+                    className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
               </div>
@@ -142,7 +142,7 @@ const UserProfile = () => {
                   placeholder="Tell potential buyers about your breeding experience, specialties, and what makes your guppies special..."
                   rows={4}
                   defaultValue="Passionate guppy breeder with over 5 years of experience. Specializing in premium bloodlines including Moscow, Delta, and Rainbow varieties. All fish are carefully bred in optimal conditions with health guarantees."
-                  className="border-aqua/20 focus:border-aqua"
+                  className="border-aqua/20 focus:border-aqua text-base"
                 />
               </div>
             </div>

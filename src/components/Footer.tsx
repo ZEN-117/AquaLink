@@ -30,11 +30,11 @@ const Footer = () => {
               </span>
             </div>
             </Link>
-            <p className="text-muted-foreground mb-6 max-w-md">
+            <p className="text-muted-foreground text-lg mb-6 max-w-md">
               Your trusted partner in premium guppy fish distribution. We provide the finest quality fish with advanced stock management and real-time monitoring systems.
             </p>
             <div className="flex space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-2 text-m text-muted-foreground font-semibold">
                 <Mail className="h-4 w-4 text-primary" />
                 <span>info@aqualink.com</span>
               </div>

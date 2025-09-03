@@ -89,18 +89,18 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
-                <h2 className="font-bold text-lg text-foreground">AquaLink</h2>
-                <p className="text-xs text-muted-foreground">Dashboard</p>
+                <h2 className="font-bold text-xl text-foreground">AquaLink</h2>
+                <p className="text-sm text-muted-foreground">Dashboard</p>
               </NavLink>
             )}
           </div>
         </div>
 
-        {/* Main Management Menu */}
+        {/* Main  menu */}
         <SidebarGroup className="px-2 flex-1">
-          <SidebarGroupLabel className="text-aqua font-medium px-2 py-2">
+          {/* <SidebarGroupLabel className="text-aqua text-sm font-medium px-2 py-2">
             {!collapsed && "Management"}
-          </SidebarGroupLabel>
+          </SidebarGroupLabel> */}
 
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
@@ -119,7 +119,7 @@ export function AppSidebar() {
                           <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                           {!collapsed && (
                             <div className="flex-1 min-w-0">
-                              <span className="block text-l font-medium">{item.title}</span>
+                              <span className="block text-base font-medium">{item.title}</span>
                               <span
                                 className={`block text-sm truncate ${
                                   isActive ? "text-white" : "text-primary"
@@ -154,7 +154,7 @@ export function AppSidebar() {
                     <HouseIcon className="w-5 h-5 mr-3 flex-shrink-0" />
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
-                        <span className="block text-l font-medium">Back to Home</span>
+                        <span className="block text-base font-medium">Back to Home</span>
                         <span className="block text-sm text-primary">Visit home page</span>
                       </div>
                     )}
@@ -172,7 +172,7 @@ export function AppSidebar() {
                 <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
-                    <span className="block text-l font-medium">Logout</span>
+                    <span className="block text-base font-medium">Logout</span>
                     <span className="text-red-500 block text-sm text-muted-foreground">
                       Sign out of your account
                     </span>
