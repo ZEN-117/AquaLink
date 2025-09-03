@@ -19,7 +19,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-t from-secondary/20 to-background border-t border-border">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo & Description */}
+          {/* Logo */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <Fish className="h-8 w-8 text-primary" />
