@@ -71,7 +71,7 @@ export function AppSidebar() {
       : "hover:bg-aqua/5 hover:text-aqua transition-all duration-200";
 
   const handleLogout = () => {
-    // For now, just navigate to home (placeholder for real auth)
+    
     navigate("/");
   };
 
@@ -105,7 +105,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
               {menuItems
-                .filter((item) => item.title !== "Back to Home") // remove "Back to Home" from main
+                .filter((item) => item.title !== "Back to Home") 
                 .map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <NavLink to={item.url} end>
@@ -138,15 +138,15 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Footer Actions (bottom pinned) */}
+        {/* Footer actions  */}
         <div className="border-t border-aqua/10 p-2">
           <SidebarMenu className="space-y-2">
-            {/* Back to Home */}
+            {/* Back to home */}
             <SidebarMenuItem>
               <NavLink to="/" end>
                 {({ isActive }) => (
                   <div
-                    className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                    className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all hover:bg-primary/10 duration-200 hover-scale cursor-pointer
                       ${isActive
                         ? "bg-gradient-to-r from-primary to-black text-background font-medium"
                         : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
@@ -154,8 +154,8 @@ export function AppSidebar() {
                     <HouseIcon className="w-5 h-5 mr-3 flex-shrink-0" />
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-medium">Back to Home</span>
-                        <span className="block text-xs text-primary">Visit home page</span>
+                        <span className="block text-l font-medium">Back to Home</span>
+                        <span className="block text-sm text-primary">Visit home page</span>
                       </div>
                     )}
                   </div>
@@ -163,7 +163,7 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuItem>
 
-            {/* Logout Button */}
+            {/* Logout button */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={handleLogout}
@@ -172,8 +172,8 @@ export function AppSidebar() {
                 <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
-                    <span className="block text-sm font-medium">Logout</span>
-                    <span className="text-red-500 block text-xs text-muted-foreground">
+                    <span className="block text-l font-medium">Logout</span>
+                    <span className="text-red-500 block text-sm text-muted-foreground">
                       Sign out of your account
                     </span>
                   </div>
