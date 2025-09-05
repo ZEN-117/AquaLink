@@ -46,27 +46,27 @@ const Footer = () => {
             <h3 className="font-semibold text-xl text-foreground mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="font-semibold text-muted-foreground hover:text-primary transition-colors ">
+                <Link to="/" className="font-semibold text-lg text-muted-foreground hover:text-primary transition-colors ">
                   Home
                 </Link>
               </li>
               <li>
                 <button 
                   onClick={() => handleScroll('about')}
-                  className="font-semibold text-muted-foreground hover:text-primary transition-colors"
+                  className="font-semibold text-lg text-muted-foreground hover:text-primary transition-colors"
                 >
                   About Us
                 </button>
               </li>
               <li>
-                <Link to="/marketplace" className="font-semibold text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/marketplace" className="font-semibold text-lg text-muted-foreground hover:text-primary transition-colors">
                   Marketplace
                 </Link>
               </li>
               <li>
                 <button 
                   onClick={() => handleScroll('contact')}
-                  className="font-semibold text-muted-foreground hover:text-primary transition-colors"
+                  className="font-semibold text-lg text-muted-foreground hover:text-primary transition-colors"
                 >
                   Contact Us
                 </button>
@@ -78,10 +78,10 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-xl text-foreground mb-4">Services</h3>
             <ul className="space-y-2 text-muted-foreground">
-              <li className="font-semibold">Stock Management</li>
-              <li className="font-semibold">Live Fish Monitoring</li>
-              <li className="font-semibold">Quality Assurance</li>
-              <li className="font-semibold">Distribution Network</li>
+              <li className="font-semibold text-lg">Stock Management</li>
+              <li className="font-semibold text-lg">Live Fish Monitoring</li>
+              <li className="font-semibold text-lg">Quality Assurance</li>
+              <li className="font-semibold text-lg">Distribution Network</li>
             </ul>
           </div>
         </div>
