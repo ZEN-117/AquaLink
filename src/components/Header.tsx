@@ -5,7 +5,7 @@ import { Fish, Menu, X, User } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const location = useLocation();
 
   const scrollToSection = (sectionId: string) => {
@@ -28,9 +28,20 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Left navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+        <div className="flex items-center justify-between h-16 relative">
+          {/* Left: Logo */}
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="relative">
+              <Fish className="h-8 w-8 text-primary group-hover:text-accent transition-colors duration-300" />
+              <div className="absolute inset-0 bg-primary/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-500"></div>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
+              AquaLink
+            </span>
+          </Link>
+
+          {/* Center: Navigation */}
+          <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 space-x-16 text-lg">
             {navItems.map((item) => (
               <div key={item.name}>
                 {item.href ? (
@@ -54,26 +65,15 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="relative">
-              <Fish className="h-8 w-8 text-primary group-hover:text-accent transition-colors duration-300" />
-              <div className="absolute inset-0 bg-primary/20 rounded-full scale-0 group-hover:scale-150 transition-transform duration-500"></div>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-black bg-clip-text text-transparent">
-              AquaLink
-            </span>
-          </Link>
-
-          {/* User actions */}
+          {/* Right: User actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="black" size="sm" className="text-foreground text-white" asChild>
+            <Button variant="black" size="sm" className="text-base text-white" asChild>
               <Link to="/signin">
                 <User className="h-4 w-4 mr-2 text-white" />
                 Sign In
               </Link>
             </Button>
-            <Button variant="ocean" size="sm" asChild>
+            <Button variant="ocean" size="sm" className="text-base" asChild>
               <Link to="/signup">Sign Up</Link>
             </Button>
           </div>

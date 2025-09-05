@@ -146,7 +146,7 @@ const ContactSection = () => {
                     />
                   </div>
                   
-                  <Button type="submit" variant="ocean" size="lg" className="w-full">
+                  <Button type="submit" variant="ocean" size="lg" className="w-full text-lg">
                     Send Message
                   </Button>
                 </form>

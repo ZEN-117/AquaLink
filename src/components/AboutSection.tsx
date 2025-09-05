@@ -58,28 +58,28 @@ const AboutSection = () => {
                 <div className="flex items-start space-x-3">
                   <Check className="h-6 w-6 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Real-time Health Monitoring</h4>
-                    <p className="text-muted-foreground">Advanced sensors track water quality and fish behavior 24/7.</p>
+                    <h4 className="font-semibold text-lg text-foreground">Real-time Health Monitoring</h4>
+                    <p className="text-muted-foreground text-base">Advanced sensors track water quality and fish behavior 24/7.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <Check className="h-6 w-6 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Automated Stock Management</h4>
-                    <p className="text-muted-foreground">Smart inventory systems optimize breeding and distribution schedules.</p>
+                    <h4 className="font-semibold text-foreground text-lg">Automated Stock Management</h4>
+                    <p className="text-muted-foreground text-base">Smart inventory systems optimize breeding and distribution schedules.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <Check className="h-6 w-6 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <h4 className="font-semibold text-foreground">Quality Assurance</h4>
-                    <p className="text-muted-foreground">Rigorous testing and certification processes ensure premium quality.</p>
+                    <h4 className="font-semibold text-foreground text-lg">Quality Assurance</h4>
+                    <p className="text-muted-foreground text-base">Rigorous testing and certification processes ensure premium quality.</p>
                   </div>
                 </div>
               </div>
 
               <a href="#contact">
-                <Button variant="ocean" size="lg" className="mt-6">
+                <Button variant="ocean" size="lg" className="mt-6 text-lg">
                   Learn More About Our Process
                 </Button>
               </a>
@@ -102,7 +102,7 @@ const AboutSection = () => {
                     <h4 className="text-lg font-semibold text-foreground mb-2">
                       {feature.title}
                     </h4>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground text-base">
                       {feature.description}
                     </p>
                   </div>

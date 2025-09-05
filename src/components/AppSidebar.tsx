@@ -121,7 +121,7 @@ export function AppSidebar() {
                             <div className="flex-1 min-w-0">
                               <span className="block text-base font-medium">{item.title}</span>
                               <span
-                                className={`block text-sm truncate ${
+                                className={`block text-sm font-semibold truncate ${
                                   isActive ? "text-white" : "text-primary"
                                 }`}
                               >

@@ -94,7 +94,7 @@ const ManageGigs = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Gig Title</Label>
+                <Label htmlFor="title" className="text-base">Gig Title</Label>
                 <Input 
                   id="title" 
                   placeholder="e.g., Premium Rainbow Guppy Male"
@@ -102,7 +102,7 @@ const ManageGigs = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price" className="text-base">Price ($)</Label>
                 <Input 
                   id="price" 
                   type="number"
@@ -115,7 +115,7 @@ const ManageGigs = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-base">Category</Label>
                 <Select>
                   <SelectTrigger className="border-aqua/20">
                     <SelectValue placeholder="Select category" />
@@ -129,7 +129,7 @@ const ManageGigs = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stock">Stock Quantity</Label>
+                <Label htmlFor="stock" className="text-base">Stock Quantity</Label>
                 <Input 
                   id="stock" 
                   type="number"
@@ -140,7 +140,7 @@ const ManageGigs = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-base">Description</Label>
               <Textarea 
                 id="description"
                 placeholder="Describe your guppy's characteristics, breeding lineage, care instructions..."

@@ -123,7 +123,7 @@ const Marketplace = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero  */}
+      {/* Hero */}
       <section className="pt-24 pb-12 bg-gradient-to-br from-primary/10 via-background to-accent/5">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -139,7 +139,7 @@ const Marketplace = () => {
         </div>
       </section>
 
-      {/* Filters & Search */}
+      {/* Filters & search*/}
       <section className="py-8 border-b border-border">
         <div className="container mx-auto px-4">
           <Card className="border-border/50">
@@ -147,7 +147,7 @@ const Marketplace = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 {/* Search */}
                 <div className="lg:col-span-2">
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-lg font-medium text-foreground mb-2">
                     Search Guppies
                   </label>
                   <div className="relative">
@@ -161,9 +161,9 @@ const Marketplace = () => {
                   </div>
                 </div>
 
-                {/* Category  */}
+                {/* Category*/}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-lg font-medium text-foreground mb-2">
                     Category
                   </label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -180,9 +180,9 @@ const Marketplace = () => {
                   </Select>
                 </div>
 
-                {/* Rarity  */}
+                {/*Rarity */}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-lg font-medium text-foreground mb-2">
                     Rarity
                   </label>
                   <Select value={selectedRarity} onValueChange={setSelectedRarity}>
@@ -201,7 +201,7 @@ const Marketplace = () => {
 
                 {/* Sort */}
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-lg font-medium text-foreground mb-2">
                     Sort By
                   </label>
                   <Select value={sortBy} onValueChange={setSortBy}>
@@ -219,7 +219,7 @@ const Marketplace = () => {
                 </div>
               </div>
 
-              {/* View Mode Toggle */}
+              {/* View toggle */}
               <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
                 <p className="text-sm text-muted-foreground">
                   Showing {filteredGuppies.length} of {mockGuppies.length} guppies
@@ -246,7 +246,7 @@ const Marketplace = () => {
         </div>
       </section>
 
-      {/* Guppy Grid */}
+      {/* Guppy grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className={`grid gap-6 ${
@@ -265,7 +265,7 @@ const Marketplace = () => {
             ))}
           </div>
 
-          {/* No Results */}
+          {/* No results */}
           {filteredGuppies.length === 0 && (
             <div className="text-center py-12">
               <div className="max-w-md mx-auto">
