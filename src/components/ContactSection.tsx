@@ -21,7 +21,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Visit Us",
-    details: "123 Aquatic Way, Miami, FL",
+    details: "Kuliyapitiya, Sri Lanka",
     subtitle: "Our main distribution center"
   },
   {
