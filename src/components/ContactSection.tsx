@@ -9,7 +9,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    details: "info@aquaflow.com",
+    details: "info@aqualink.com",
     subtitle: "Get in touch via email"
   },
   {
@@ -21,7 +21,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Visit Us",
-    details: "123 Aquatic Way, Miami, FL",
+    details: "Kuliyapitiya, Sri Lanka",
     subtitle: "Our main distribution center"
   },
   {
