@@ -4,20 +4,6 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Heart, Eye, ShoppingCart, Star } from "lucide-react";
 
-interface GuppyCardProps {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviews: number;
-  category: string;
-  rarity: "Common" | "Rare" | "Epic" | "Legendary";
-  inStock: number;
-  features: string[];
-}
-
 const rarityColors = {
   Common: "bg-muted text-muted-foreground",
   Rare: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -37,7 +23,7 @@ const GuppyCard = ({
   rarity, 
   inStock, 
   features 
-}: GuppyCardProps) => {
+}) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
