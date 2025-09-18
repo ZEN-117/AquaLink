@@ -33,7 +33,7 @@ const GuppyListCard = ({
   return (
     <Card className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg bg-card/50 backdrop-blur-sm w-full">
       <CardContent className="p-0">
-        <div className="flex h-48">
+        <div className="flex h-60">
           {/* Image Section */}
           <div className="relative w-56 h-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-secondary/30 to-background">
             <img
