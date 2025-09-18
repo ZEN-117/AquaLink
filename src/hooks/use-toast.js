@@ -13,6 +13,7 @@ const actionTypes = {
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 }
+}
 
 let count = 0
 
@@ -21,6 +22,7 @@ function genId() {
   return count.toString()
 }
 
+const toastTimeouts = new Map()
 const toastTimeouts = new Map()
 
 const addToRemoveQueue = (toastId) => {
@@ -101,6 +103,7 @@ const listeners = []
 let memoryState = { toasts: [] }
 
 function dispatch(action) {
+function dispatch(action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
     listener(memoryState)
@@ -139,6 +142,7 @@ function toast(props) {
 
 function useToast() {
   const [state, setState] = React.useState(memoryState)
+  const [state, setState] = React.useState(memoryState)
 
   React.useEffect(() => {
     listeners.push(setState)
@@ -153,6 +157,7 @@ function useToast() {
   return {
     ...state,
     toast,
+    dismiss: (toastId) => dispatch({ type: "DISMISS_TOAST", toastId }),
     dismiss: (toastId) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }
