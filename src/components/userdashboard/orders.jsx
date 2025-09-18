@@ -9,7 +9,7 @@ import { Plus, Edit, Trash2, Eye, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
 
-const ManageGigs = () => {
+const Orders = () => {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
@@ -114,8 +114,7 @@ const ManageGigs = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Manage Gigs</h1>
-          <p className="text-muted-foreground">Add and manage your guppy listings</p>
+          <h1 className="text-3xl font-bold text-foreground">Your Orders</h1>
         </div>
         <Button
           onClick={() => {
@@ -126,7 +125,7 @@ const ManageGigs = () => {
           className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale "
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add New Gig
+          Place New Order
         </Button>
       </div>
 
@@ -134,7 +133,7 @@ const ManageGigs = () => {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
         <Input
-          placeholder="Search your gigs..."
+          placeholder="Search your orders..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 border-aqua/20 focus:border-aqua"
@@ -145,8 +144,8 @@ const ManageGigs = () => {
       {showForm && (
         <Card className="animate-fade-in border-aqua/20">
           <CardHeader>
-            <CardTitle>{editingProduct ? "Edit Gig" : "Add New Gig"}</CardTitle>
-            <CardDescription>{editingProduct ? "Update your guppy listing" : "Create a new guppy listing"}</CardDescription>
+            <CardTitle>{editingProduct ? "Edit Order" : "Place New Order"}</CardTitle>
+            <CardDescription>{editingProduct ? "Update your Order" : " Place a new guppy order"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -199,9 +198,7 @@ const ManageGigs = () => {
                       <h3 className="font-semibold text-foreground">{gig.title}</h3>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-lg font-bold text-aqua">${gig.price.toFixed(2)}</span>
-                        <Badge className={getStatusColor(gig.stock > 0 ? "In Stock" : "Out of Stock")}>
-                          {gig.stock > 0 ? "In Stock" : "Out of Stock"}
-                          </Badge>
+                        <Badge className={getStatusColor(gig.status)}>{gig.status}</Badge>
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <span>Stock: {gig.stock}</span>
@@ -232,4 +229,4 @@ const ManageGigs = () => {
   );
 };
 
-export default ManageGigs;
+export default Orders;
