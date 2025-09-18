@@ -54,7 +54,8 @@ const FinanceManagement = () => {
     }
   ];
 
-  const getStatusColor = (status: string) => {
+  // ✅ Removed TypeScript ": string"
+  const getStatusColor = (status) => {
     switch (status) {
       case "Completed":
         return "bg-green-500/10 text-green-500";
@@ -67,7 +68,7 @@ const FinanceManagement = () => {
     }
   };
 
-  const getAmountColor = (amount: string) => {
+  const getAmountColor = (amount) => {
     return amount.startsWith('+') ? 'text-green-500' : 'text-red-500';
   };
 

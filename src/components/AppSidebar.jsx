@@ -1,15 +1,12 @@
-import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, NavLink } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { 
@@ -62,16 +59,9 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => currentPath === path;
-  const isExpanded = menuItems.some((item) => isActive(item.url));
-
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive 
-      ? "bg-aqua/10 text-aqua border-r-2 border-aqua font-medium" 
-      : "hover:bg-aqua/5 hover:text-aqua transition-all duration-200";
+  const isActive = (path) => currentPath === path;
 
   const handleLogout = () => {
-    
     navigate("/");
   };
 
@@ -96,12 +86,8 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Main  menu */}
+        {/* Main menu */}
         <SidebarGroup className="px-2 flex-1">
-          {/* <SidebarGroupLabel className="text-aqua text-sm font-medium px-2 py-2">
-            {!collapsed && "Management"}
-          </SidebarGroupLabel> */}
-
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
               {menuItems
@@ -138,7 +124,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Footer actions  */}
+        {/* Footer actions */}
         <div className="border-t border-aqua/10 p-2">
           <SidebarMenu className="space-y-2">
             {/* Back to home */}

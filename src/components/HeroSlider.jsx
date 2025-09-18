@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight, BarChart3, ShoppingCart, Activity } from "lucide-react";
+
 import heroGuppy from "@/assets/hero-guppy.jpg";
 import guppyCollection from "@/assets/guppy-collection.jpg";
 import smartAquarium from "@/assets/smart-aquarium.jpg";
-import guppyImg from "@/assets/guppy.png";
 
 const slides = [
   {
@@ -58,7 +58,7 @@ const HeroSlider = () => {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
-  const handleCtaClick = (action: string | (() => string)) => {
+  const handleCtaClick = (action) => {
     if (typeof action === "function") {
       navigate(action());
       return;
@@ -73,8 +73,7 @@ const HeroSlider = () => {
     }
   };
 
-  
-return (
+  return (
     <div className="relative h-screen overflow-hidden bg-gradient-to-br from-background to-secondary/30">
       {slides.map((slide, index) => (
         <div
@@ -161,25 +160,25 @@ return (
       </div>
 
       {/* Floating elements */}
-        <div className="absolute z-50 top-20 right-20 w-20 h-20 rounded-full bg-accent/20 animate-float delay-1000"></div>
-        <div className="absolute z-50 bottom-40 left-20 w-16 h-16 rounded-full bg-primary/20 animate-float delay-2000"></div>
-        <div className="absolute z-50 top-1/3 right-1/4 w-12 h-12 rounded-full bg-primary-glow/20 animate-float delay-3000"></div>
+      <div className="absolute z-50 top-20 right-20 w-20 h-20 rounded-full bg-accent/20 animate-float delay-1000"></div>
+      <div className="absolute z-50 bottom-40 left-20 w-16 h-16 rounded-full bg-primary/20 animate-float delay-2000"></div>
+      <div className="absolute z-50 top-1/3 right-1/4 w-12 h-12 rounded-full bg-primary-glow/20 animate-float delay-3000"></div>
 
-        {/* Floating guppy image */}
-        <img
-          src="./guppy.png"
-          alt="Floating Guppy"
-          className="absolute z-50 top-1/2 left-10 w-12 animate-float delay-3000 opacity-40"
-        />
-        <img
-          src="./guppy.png"
-          className="absolute z-50 bottom-20 right-16 w-16 animate-float delay-3000 opacity-40 "
-        />
-        <img
-          src="./guppy.png"
-          className="absolute z-50 bottom-80 right-60 w-16 animate-float delay-3000 opacity-40 "
-          style={{ animationDelay: "2500ms" }}
-        />
+      {/* Floating guppy image */}
+      <img
+        src="./guppy.png"
+        alt="Floating Guppy"
+        className="absolute z-50 top-1/2 left-10 w-12 animate-float delay-3000 opacity-40"
+      />
+      <img
+        src="./guppy.png"
+        className="absolute z-50 bottom-20 right-16 w-16 animate-float delay-3000 opacity-40 "
+      />
+      <img
+        src="./guppy.png"
+        className="absolute z-50 bottom-80 right-60 w-16 animate-float delay-3000 opacity-40 "
+        style={{ animationDelay: "2500ms" }}
+      />
     </div>
   );
 };

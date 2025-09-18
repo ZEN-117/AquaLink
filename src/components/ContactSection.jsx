@@ -10,26 +10,26 @@ const contactInfo = [
     icon: Mail,
     title: "Email Us",
     details: "info@aqualink.com",
-    subtitle: "Get in touch via email"
+    subtitle: "Get in touch via email",
   },
   {
     icon: Phone,
     title: "Call Us",
     details: "+1 (555) 123-4567",
-    subtitle: "Mon-Fri 9AM-6PM EST"
+    subtitle: "Mon-Fri 9AM-6PM EST",
   },
   {
     icon: MapPin,
     title: "Visit Us",
     details: "Kuliyapitiya, Sri Lanka",
-    subtitle: "Our main distribution center"
+    subtitle: "Our main distribution center",
   },
   {
     icon: Clock,
     title: "Business Hours",
     details: "Mon-Fri: 9AM-6PM",
-    subtitle: "Weekend: 10AM-4PM"
-  }
+    subtitle: "Weekend: 10AM-4PM",
+  },
 ];
 
 const ContactSection = () => {
@@ -37,18 +37,18 @@ const ContactSection = () => {
     name: "",
     email: "",
     subject: "",
-    message: ""
+    message: "",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     // Handle form submission here
     console.log("Form submitted:", formData);
@@ -114,7 +114,7 @@ const ContactSection = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="subject" className="block text-m font-medium text-foreground mb-2">
                       Subject
@@ -129,7 +129,7 @@ const ContactSection = () => {
                       className="transition-all duration-300 focus:shadow-lg"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="message" className="block text-m font-medium text-foreground mb-2">
                       Message
@@ -145,7 +145,7 @@ const ContactSection = () => {
                       className="transition-all duration-300 focus:shadow-lg"
                     />
                   </div>
-                  
+
                   <Button type="submit" variant="ocean" size="lg" className="w-full text-lg">
                     Send Message
                   </Button>

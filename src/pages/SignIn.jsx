@@ -14,13 +14,13 @@ const SignIn = () => {
   });
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     // For now, just navigate to dashboard (placeholder for real auth)
     navigate("/dashboard");
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -38,7 +38,7 @@ const SignIn = () => {
             <div>
               <CardTitle className="text-2xl font-bold text-foreground">Welcome Back</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Sign in to your AquaFlow account
+                Sign in to your AquaLink account
               </CardDescription>
             </div>
           </CardHeader>
@@ -90,7 +90,7 @@ const SignIn = () => {
               <div className="flex items-center justify-between">
                 <Link 
                   to="/forgot-password" 
-                  className="text-sm text-aqua  hover:text-aqua-light transition-colors story-link"
+                  className="text-sm text-aqua hover:text-aqua-light transition-colors story-link"
                 >
                   Forgot password?
                 </Link>

@@ -17,14 +17,14 @@ const SignUp = () => {
   });
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     // For now, just navigate to dashboard (placeholder for real auth)
     navigate("/dashboard");
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+  const handleChange = (e) => {
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
@@ -39,7 +39,7 @@ const SignUp = () => {
               <Fish className="w-8 h-8 text-white" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Join AquaFlow</CardTitle>
+              <CardTitle className="text-2xl font-bold text-foreground">Join AquaLink</CardTitle>
               <CardDescription className="text-muted-foreground">
                 Start your premium guppy distribution journey
               </CardDescription>

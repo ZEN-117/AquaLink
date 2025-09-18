@@ -25,7 +25,7 @@ const mockGuppies = [
     rating: 4.8,
     reviews: 124,
     category: "Premium Males",
-    rarity: "Epic" as const,
+    rarity: "Epic",
     inStock: 8,
     features: ["Vibrant Blue", "Large Fins", "Breeding Quality"]
   },
@@ -37,7 +37,7 @@ const mockGuppies = [
     rating: 4.9,
     reviews: 89,
     category: "Premium Females",
-    rarity: "Rare" as const,
+    rarity: "Rare",
     inStock: 12,
     features: ["Orange & Red", "Peaceful", "High Fertility"]
   },
@@ -50,7 +50,7 @@ const mockGuppies = [
     rating: 5.0,
     reviews: 45,
     category: "Exclusive Collection",
-    rarity: "Legendary" as const,
+    rarity: "Legendary",
     inStock: 3,
     features: ["Multi-Color", "Show Quality", "Champion Bloodline"]
   },
@@ -62,7 +62,7 @@ const mockGuppies = [
     rating: 4.7,
     reviews: 156,
     category: "Premium Males",
-    rarity: "Epic" as const,
+    rarity: "Epic",
     inStock: 6,
     features: ["Metallic Sheen", "Fast Growth", "Hardy"]
   },
@@ -75,7 +75,7 @@ const mockGuppies = [
     rating: 4.6,
     reviews: 203,
     category: "Breeding Pairs",
-    rarity: "Rare" as const,
+    rarity: "Rare",
     inStock: 15,
     features: ["Male & Female", "Compatible", "Proven Breeders"]
   },
@@ -87,7 +87,7 @@ const mockGuppies = [
     rating: 4.5,
     reviews: 98,
     category: "Specialty",
-    rarity: "Common" as const,
+    rarity: "Common",
     inStock: 20,
     features: ["Unique Pattern", "Active", "Beginner Friendly"]
   }
@@ -108,14 +108,15 @@ const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedRarity, setSelectedRarity] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState("grid");
 
   const filteredGuppies = mockGuppies.filter(guppy => {
-    const matchesSearch = guppy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         guppy.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      guppy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guppy.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || guppy.category === selectedCategory;
     const matchesRarity = selectedRarity === "All" || guppy.rarity === selectedRarity;
-    
+
     return matchesSearch && matchesCategory && matchesRarity;
   });
 
@@ -139,7 +140,7 @@ const Marketplace = () => {
         </div>
       </section>
 
-      {/* Filters & search*/}
+      {/* Filters & search */}
       <section className="py-8 border-b border-border">
         <div className="container mx-auto px-4">
           <Card className="border-border/50">
@@ -161,7 +162,7 @@ const Marketplace = () => {
                   </div>
                 </div>
 
-                {/* Category*/}
+                {/* Category */}
                 <div>
                   <label className="block text-lg font-medium text-foreground mb-2">
                     Category
@@ -180,7 +181,7 @@ const Marketplace = () => {
                   </Select>
                 </div>
 
-                {/*Rarity */}
+                {/* Rarity */}
                 <div>
                   <label className="block text-lg font-medium text-foreground mb-2">
                     Rarity
@@ -249,11 +250,13 @@ const Marketplace = () => {
       {/* Guppy grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className={`grid gap-6 ${
-            viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-              : "grid-cols-1 max-w-4xl mx-auto"
-          }`}>
+          <div
+            className={`grid gap-6 ${
+              viewMode === "grid"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "grid-cols-1 max-w-4xl mx-auto"
+            }`}
+          >
             {filteredGuppies.map((guppy, index) => (
               <div
                 key={guppy.id}
@@ -276,8 +279,8 @@ const Marketplace = () => {
                 <p className="text-muted-foreground mb-6">
                   Try adjusting your filters or search terms to find what you're looking for.
                 </p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setSearchTerm("");
                     setSelectedCategory("All");

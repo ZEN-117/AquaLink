@@ -45,14 +45,15 @@ const ManageGigs = () => {
     }
   ];
 
-  const getStatusColor = (status: string) => {
+  // ✅ Removed TypeScript type annotation
+  const getStatusColor = (status) => {
     switch (status) {
       case "Active":
-        return "bg-green-500/90 text-white ";
+        return "bg-green-500/90 text-white";
       case "Out of Stock":
-        return "bg-red-500/90 text-white ";
+        return "bg-red-500/90 text-white";
       default:
-        return "bg-gray-500/10 text-gray-500 ";
+        return "bg-gray-500/10 text-gray-500";
     }
   };
 
@@ -66,7 +67,7 @@ const ManageGigs = () => {
         </div>
         <Button 
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale "
+          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add New Gig

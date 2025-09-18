@@ -10,14 +10,15 @@ const Index = () => {
   const location = useLocation();
 
   useEffect(() => {
-    
-    const scrollToId = (location.state as any)?.scrollTo;
+    // Remove TS "as any"
+    const scrollToId = location.state?.scrollTo;
     if (scrollToId) {
       const element = document.getElementById(scrollToId);
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }
-      
+
+      // Clear state from history so it doesn’t scroll again on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location]);
