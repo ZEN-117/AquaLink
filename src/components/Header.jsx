@@ -125,7 +125,7 @@ const Header = () => {
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Cart
                     <span className="absolute left-8 top-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                      4
+                      3
                     </span>
                   </Link>
                 </Button>
