@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+//import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,13 +10,14 @@ import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
+import {Toaster} from "react-hot-toast";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
+      <Toaster position="top-center"/>
       <Sonner />
       <Routes>
         <Route path="/" element={<Index />} />
