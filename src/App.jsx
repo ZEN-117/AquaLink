@@ -8,6 +8,7 @@ import Marketplace from "./pages/Marketplace";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
+import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/dashboard/*" element={<Dashboard />} />

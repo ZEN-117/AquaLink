@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Fish, Menu, X, User } from "lucide-react";
+import { Fish, Menu, X, User, ShoppingCart } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,6 +67,14 @@ const Header = () => {
 
           {/* Right: User actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost" size="sm" className="relative" asChild>
+              <Link to="/cart">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  3
+                </span>
+              </Link>
+            </Button>
             <Button variant="black" size="sm" className="text-base text-white" asChild>
               <Link to="/signin">
                 <User className="h-4 w-4 mr-2 text-white" />
@@ -112,6 +120,15 @@ const Header = () => {
                 </div>
               ))}
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
+                <Button variant="ghost" size="sm" className="justify-start relative" asChild>
+                  <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Cart
+                    <span className="absolute left-8 top-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      3
+                    </span>
+                  </Link>
+                </Button>
                 <Button variant="ghost" size="sm" className="justify-start" asChild>
                   <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
                     <User className="h-4 w-4 mr-2" />
