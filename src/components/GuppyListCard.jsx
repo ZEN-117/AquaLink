@@ -31,11 +31,11 @@ const GuppyListCard = ({
     : 0;
 
   return (
-    <Card className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg bg-card/50 backdrop-blur-sm">
+    <Card className="group overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg bg-card/50 backdrop-blur-sm w-full">
       <CardContent className="p-0">
-        <div className="flex">
+        <div className="flex h-40">
           {/* Image Section */}
-          <div className="relative w-48 h-32 flex-shrink-0 overflow-hidden bg-gradient-to-br from-secondary/30 to-background">
+          <div className="relative w-56 h-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-secondary/30 to-background">
             <img
               src={image}
               alt={name}
@@ -86,7 +86,7 @@ const GuppyListCard = ({
           </div>
 
           {/* Details Section */}
-          <div className="flex-1 p-4 flex flex-col justify-between">
+          <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
               {/* Category */}
               <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
