@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GuppyCard from "@/components/GuppyCard";
+import GuppyListCard from "@/components/GuppyListCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -263,7 +264,11 @@ const Marketplace = () => {
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <GuppyCard {...guppy} />
+                {viewMode === "grid" ? (
+                  <GuppyCard {...guppy} />
+                ) : (
+                  <GuppyListCard {...guppy} />
+                )}
               </div>
             ))}
           </div>
