@@ -43,6 +43,10 @@ export function UserAppSidebar() {
   const isActive = (path) => currentPath === path;
 
   const handleLogout = () => {
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+    } catch (_) {}
     navigate("/");
   };
 

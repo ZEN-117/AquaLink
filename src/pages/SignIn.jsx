@@ -32,6 +32,7 @@ const SignIn = () => {
 
       if (token) {
         localStorage.setItem("token", token);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       }
 
       // Navigate to dashboard on success
@@ -43,6 +44,11 @@ const SignIn = () => {
         navigate("/userdashboard");
       } else if (user === "admin") {
         navigate("/dashboard");
+      }
+
+      // Persist role for header/profile routing
+      if (user) {
+        localStorage.setItem("role", user);
       }
 
     } catch (err) {

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import GuppyCard from "@/components/GuppyCard";
@@ -9,93 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, Grid, List } from "lucide-react";
 
-// Import guppy images
-import guppyBlue from "@/assets/guppy-blue.jpg";
-import guppyRed from "@/assets/guppy-red.jpg";
-import guppyRainbow from "@/assets/guppy-rainbow.jpg";
-import guppyPremium from "@/assets/guppy-premium.jpg";
-import guppyCollection from "@/assets/guppy-collection.jpg";
-
-const mockGuppies = [
-  {
-    id: "1",
-    name: "Royal Blue Emperor",
-    image: guppyBlue,
-    price: 45,
-    originalPrice: 60,
-    rating: 4.8,
-    reviews: 124,
-    category: "Premium Males",
-    rarity: "Epic",
-    inStock: 8,
-    features: ["Vibrant Blue", "Large Fins", "Breeding Quality"]
-  },
-  {
-    id: "2",
-    name: "Sunset Paradise Female",
-    image: guppyRed,
-    price: 35,
-    rating: 4.9,
-    reviews: 89,
-    category: "Premium Females",
-    rarity: "Rare",
-    inStock: 12,
-    features: ["Orange & Red", "Peaceful", "High Fertility"]
-  },
-  {
-    id: "3",
-    name: "Rainbow Platinum",
-    image: guppyRainbow,
-    price: 125,
-    originalPrice: 150,
-    rating: 5.0,
-    reviews: 45,
-    category: "Exclusive Collection",
-    rarity: "Legendary",
-    inStock: 3,
-    features: ["Multi-Color", "Show Quality", "Champion Bloodline"]
-  },
-  {
-    id: "4",
-    name: "Silver Storm",
-    image: guppyPremium,
-    price: 55,
-    rating: 4.7,
-    reviews: 156,
-    category: "Premium Males",
-    rarity: "Epic",
-    inStock: 6,
-    features: ["Metallic Sheen", "Fast Growth", "Hardy"]
-  },
-  {
-    id: "5",
-    name: "Mixed Breeding Pair",
-    image: guppyCollection,
-    price: 80,
-    originalPrice: 100,
-    rating: 4.6,
-    reviews: 203,
-    category: "Breeding Pairs",
-    rarity: "Rare",
-    inStock: 15,
-    features: ["Male & Female", "Compatible", "Proven Breeders"]
-  },
-  {
-    id: "6",
-    name: "Neon Tetra Tail",
-    image: guppyBlue,
-    price: 40,
-    rating: 4.5,
-    reviews: 98,
-    category: "Specialty",
-    rarity: "Common",
-    inStock: 20,
-    features: ["Unique Pattern", "Active", "Beginner Friendly"]
-  }
-];
+// Real data will be fetched from API.
 
 const categories = ["All", "Premium Males", "Premium Females", "Breeding Pairs", "Exclusive Collection", "Specialty"];
-const rarities = ["All", "Common", "Rare", "Epic", "Legendary"];
 const sortOptions = [
   { value: "newest", label: "Newest First" },
   { value: "price-low", label: "Price: Low to High" },
@@ -107,18 +24,70 @@ const sortOptions = [
 const Marketplace = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedRarity, setSelectedRarity] = useState("All");
+  
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
+  const [products, setProducts] = useState([]);
+  const [fishStocks, setFishStocks] = useState([]);
 
-  const filteredGuppies = mockGuppies.filter(guppy => {
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/products");
+      setProducts(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchFishStocks = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/fishstocks");
+      setFishStocks(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchFishStocks();
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchFishStocks();
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  const getCurrentStock = (product) => {
+    const match = fishStocks.find((f) => f.fishCode === product.fishCode);
+    if (match && typeof match.stock === "number") return match.stock;
+    return product.stock || 0;
+  };
+
+  // Map products to the display schema expected by cards
+  const liveItems = (products || []).map((p) => ({
+    id: p._id,
+    name: p.title,
+    image: p.image,
+    price: p.price,
+    originalPrice: null,
+    rating: 4.7,
+    reviews: p.orders || 0,
+    category: "Guppies",
+    rarity: "Common",
+    inStock: getCurrentStock(p),
+    features: [],
+  }));
+
+  const filteredGuppies = liveItems.filter(guppy => {
     const matchesSearch =
       guppy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       guppy.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || guppy.category === selectedCategory;
-    const matchesRarity = selectedRarity === "All" || guppy.rarity === selectedRarity;
-
-    return matchesSearch && matchesCategory && matchesRarity;
+    
+    return matchesSearch && matchesCategory;
   });
 
   return (
@@ -146,7 +115,7 @@ const Marketplace = () => {
         <div className="container mx-auto px-4">
           <Card className="border-border/50">
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 {/* Search */}
                 <div className="lg:col-span-2">
                   <label className="block text-lg font-medium text-foreground mb-2">
@@ -182,24 +151,7 @@ const Marketplace = () => {
                   </Select>
                 </div>
 
-                {/* Rarity */}
-                <div>
-                  <label className="block text-lg font-medium text-foreground mb-2">
-                    Rarity
-                  </label>
-                  <Select value={selectedRarity} onValueChange={setSelectedRarity}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rarities.map(rarity => (
-                        <SelectItem key={rarity} value={rarity}>
-                          {rarity}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                
 
                 {/* Sort */}
                 <div>
@@ -224,7 +176,7 @@ const Marketplace = () => {
               {/* View toggle */}
               <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
                 <p className="text-sm text-muted-foreground">
-                  Showing {filteredGuppies.length} of {mockGuppies.length} guppies
+                  Showing {filteredGuppies.length} of {liveItems.length} guppies
                 </p>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -289,7 +241,7 @@ const Marketplace = () => {
                   onClick={() => {
                     setSearchTerm("");
                     setSelectedCategory("All");
-                    setSelectedRarity("All");
+                    
                     setSortBy("newest");
                   }}
                 >
