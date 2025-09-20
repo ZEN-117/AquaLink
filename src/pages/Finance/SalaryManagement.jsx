@@ -8,9 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
+// ---- CONFIG ----
+// Common Sri Lanka contributions
+const EPF_RATE = 0.08; // 8% employee (deducted from net)
+const ETF_RATE = 0.03; // 3% employer (usually NOT deducted from net)
+const INCLUDE_ETF_IN_NET = false; // set true if you still want ETF deducted from net
+
+const BASE_URL = "http://localhost:5000";
+const OWNER_HEADERS = { headers: { "x-role": "owner" } };
+
 export default function SalaryManagement() {
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
+
+  const [autoContrib, setAutoContrib] = useState(true);
 
   const [form, setForm] = useState({
     staffId: "",
@@ -27,29 +38,40 @@ export default function SalaryManagement() {
     tax: 0,
   });
 
+  // Auto-calc EPF/ETF when basic changes (if enabled)
+  useEffect(() => {
+    if (!autoContrib) return;
+    const basic = Number(form.basicSalary) || 0;
+    const epf = +(basic * EPF_RATE).toFixed(2);
+    const etf = +(basic * ETF_RATE).toFixed(2);
+    setForm((prev) => ({ ...prev, epf, etf }));
+  }, [form.basicSalary, autoContrib]);
+
+  // Calculations preview
   const calc = useMemo(() => {
     const basic = Number(form.basicSalary) || 0;
     const daily = basic / 28;
     const hourly = daily / 8;
-    const otW = (Number(form.otHoursWeekday) || 0) * (hourly * 1.0);
-    const otH = (Number(form.otHoursHoliday) || 0) * (hourly * 1.5);
-    const gross =
-      basic + (Number(form.allowances) || 0) + otW + otH;
-    const net =
-      gross -
-      ((Number(form.epf) || 0) +
-        (Number(form.etf) || 0) +
-        (Number(form.loan) || 0) +
-        (Number(form.tax) || 0));
+
+    const otW = (Number(form.otHoursWeekday) || 0) * (hourly * 1.0); // weekday/Sat OT
+    const otH = (Number(form.otHoursHoliday) || 0) * (hourly * 1.5); // Sun/holiday OT
+
+    const gross = basic + (Number(form.allowances) || 0) + otW + otH;
+
+    const epf = Number(form.epf) || 0;
+    const etf = Number(form.etf) || 0;
+    const loan = Number(form.loan) || 0;
+    const tax = Number(form.tax) || 0;
+
+    const totalDeductions = epf + loan + tax + (INCLUDE_ETF_IN_NET ? etf : 0);
+    const net = gross - totalDeductions;
+
     return { daily, hourly, otW, otH, gross, net };
   }, [form]);
 
   const getList = async () => {
     try {
-      const { data } = await axios.get(
-        "http://localhost:5000/api/salaries",
-        { headers: { "x-role": "owner" } } // server enforces owner-only
-      );
+      const { data } = await axios.get(`${BASE_URL}/api/salaries`, OWNER_HEADERS);
       setItems(data);
     } catch {
       toast.error("Failed to fetch salaries");
@@ -66,7 +88,7 @@ export default function SalaryManagement() {
         return toast.error("Fill all required fields");
       }
       await axios.post(
-        "http://localhost:5000/api/salaries",
+        `${BASE_URL}/api/salaries`,
         {
           ...form,
           basicSalary: Number(form.basicSalary),
@@ -78,7 +100,7 @@ export default function SalaryManagement() {
           loan: Number(form.loan),
           tax: Number(form.tax),
         },
-        { headers: { "x-role": "owner" } }
+        OWNER_HEADERS
       );
       toast.success("Salary run saved");
       setShowForm(false);
@@ -105,10 +127,7 @@ export default function SalaryManagement() {
   const onDelete = async (id) => {
     if (!confirm("Delete salary record?")) return;
     try {
-      await axios.delete(
-        `http://localhost:5000/api/salaries/${id}`,
-        { headers: { "x-role": "owner" } }
-      );
+      await axios.delete(`${BASE_URL}/api/salaries/${id}`, OWNER_HEADERS);
       toast.success("Deleted");
       getList();
     } catch {
@@ -142,6 +161,7 @@ export default function SalaryManagement() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Staff & period */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Staff ID</Label>
@@ -175,6 +195,7 @@ export default function SalaryManagement() {
               </div>
             </div>
 
+            {/* Salary & OT */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Basic Salary</Label>
@@ -210,21 +231,44 @@ export default function SalaryManagement() {
               </div>
             </div>
 
+            {/* Auto-calc toggle + Contributions */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Contributions:</span>{" "}
+                EPF {EPF_RATE * 100}% (employee), ETF {ETF_RATE * 100}% (employer)
+                {INCLUDE_ETF_IN_NET ? " — ETF deducted" : " — ETF not deducted"}
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={autoContrib}
+                  onChange={(e) => setAutoContrib(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                Auto-calculate EPF & ETF
+              </label>
+            </div>
+
+            {/* Deductions */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label>EPF</Label>
+                <Label>EPF ({EPF_RATE * 100}%)</Label>
                 <Input
                   type="number"
                   value={form.epf}
+                  readOnly={autoContrib}
                   onChange={(e) => setForm({ ...form, epf: e.target.value })}
+                  className={autoContrib ? "opacity-70 cursor-not-allowed" : ""}
                 />
               </div>
               <div className="space-y-2">
-                <Label>ETF</Label>
+                <Label>ETF ({ETF_RATE * 100}%)</Label>
                 <Input
                   type="number"
                   value={form.etf}
+                  readOnly={autoContrib}
                   onChange={(e) => setForm({ ...form, etf: e.target.value })}
+                  className={autoContrib ? "opacity-70 cursor-not-allowed" : ""}
                 />
               </div>
               <div className="space-y-2">
@@ -269,6 +313,7 @@ export default function SalaryManagement() {
         </Card>
       )}
 
+      {/* List */}
       <div className="space-y-3">
         <h2 className="text-xl font-semibold">Salary Runs</h2>
         {items.map((it) => (
@@ -283,13 +328,14 @@ export default function SalaryManagement() {
                   {new Date(it.periodEnd).toLocaleDateString()}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Basic ${it.basicSalary.toFixed(2)} • Allowances ${it.allowances.toFixed(2)} • OT $
-                  {((it.otWeekdayAmt || 0) + (it.otHolidayAmt || 0)).toFixed(2)}
+                  Basic ${Number(it.basicSalary).toFixed(2)} • Allowances $
+                  {Number(it.allowances).toFixed(2)} • OT $
+                  {Number((it.otWeekdayAmt || 0) + (it.otHolidayAmt || 0)).toFixed(2)}
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-lg font-bold text-foreground">
-                  ${it.netSalary.toFixed(2)}
+                  ${Number(it.netSalary).toFixed(2)}
                 </div>
                 <Button
                   size="sm"
@@ -303,6 +349,9 @@ export default function SalaryManagement() {
             </CardContent>
           </Card>
         ))}
+        {items.length === 0 && (
+          <div className="text-muted-foreground">No salary runs yet.</div>
+        )}
       </div>
     </div>
   );
