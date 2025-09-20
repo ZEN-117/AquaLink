@@ -23,6 +23,7 @@ const GuppyListCard = ({
   rarity,
   inStock,
   features,
+  productCode,
 }) => {
   const [isLiked, setIsLiked] = useState(false);
 
@@ -92,6 +93,13 @@ const GuppyListCard = ({
               <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                 {category}
               </p>
+
+              {/* Product Code */}
+              {productCode && (
+                <p className="text-xs text-muted-foreground mb-1 font-mono">
+                  Code: {productCode}
+                </p>
+              )}
 
               {/* Name */}
               <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">

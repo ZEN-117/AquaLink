@@ -22,33 +22,19 @@ import {
 
 const menuItems = [
   { 
-    title: "Manage Gigs", 
-    url: "/dashboard/gigs", 
-    icon: ShoppingBag,
-  },
-  { 
-    title: "Profile", 
-    url: "/dashboard/profile", 
+    title: "Orders", 
+    url: "/userdashboard/orders", 
     icon: User,
   },
   { 
-    title: "Finances", 
-    url: "/dashboard/finances", 
-    icon: DollarSign,
+    title: "Profile", 
+    url: "/userdashboard/profile", 
+    icon: User,
   },
-  { 
-    title: "Fish Stock", 
-    url: "/dashboard/stock", 
-    icon: BarChart3,
-  },
-   { 
-    title: "Inventory", 
-    url: "/dashboard/inventory", 
-    icon: BarChart3,
-  },
+
 ];
 
-export function AppSidebar() {
+export function UserAppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
@@ -76,9 +62,9 @@ export function AppSidebar() {
               <Fish className="w-5 h-5 text-primary" />
             </div>
             {!collapsed && (
-              <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
+              <NavLink to="/userdashboard" className="flex flex-col w-36 h-auto">
                 <h2 className="font-bold text-xl text-foreground">AquaLink</h2>
-                <p className="text-sm text-muted-foreground">Owner Dashboard</p>
+                <p className="text-sm text-muted-foreground">User Dashboard</p>
               </NavLink>
             )}
           </div>
@@ -125,6 +111,7 @@ export function AppSidebar() {
         {/* Footer actions */}
         <div className="border-t border-aqua/10 p-2">
           <SidebarMenu className="space-y-2">
+
             {/* Back to home */}
             <SidebarMenuItem>
               <NavLink to="/" end>
