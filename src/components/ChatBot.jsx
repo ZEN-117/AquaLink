@@ -21,13 +21,37 @@ const ChatBot = () => {
 };
 
 
- const sendMessage = async () => {
+const fallbackReplies = [
+  "Hmm, I didn’t quite get that. Could you rephrase?",
+  "I’m not sure I understand. Can you ask differently?",
+  "Sorry, I’m still learning. Could you try asking another way?",
+  "Oops! That went over my head 😅. Can you ask something else?"
+];
+
+const sendMessage = async () => {
   if (!input.trim()) return;
 
   const userMessage = input.trim();
   setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
   setInput("");
 
+  // 1. Check local FAQ (supports partial matches)
+  const lowerMessage = userMessage.toLowerCase();
+  let matchedAnswer = null;
+
+  for (const keyword in faqAnswers) {
+    if (lowerMessage.includes(keyword)) {
+      matchedAnswer = faqAnswers[keyword];
+      break;
+    }
+  }
+
+  if (matchedAnswer) {
+    setMessages((prev) => [...prev, { from: "bot", text: matchedAnswer }]);
+    return; // stop here, don’t call backend
+  }
+
+  // 2. Otherwise, call backend
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat`, {
       method: "POST",
@@ -36,18 +60,15 @@ const ChatBot = () => {
     });
 
     const data = await res.json();
+    const botReply = data.reply || fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
 
-    setMessages((prev) => [
-      ...prev,
-      { from: "bot", text: data.reply || "Sorry, I didn't understand that." },
-    ]);
+    setMessages((prev) => [...prev, { from: "bot", text: botReply }]);
   } catch (err) {
-    setMessages((prev) => [
-      ...prev,
-      { from: "bot", text: "⚠️ Sorry, something went wrong. Try again later." },
-    ]);
+    const botReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+    setMessages((prev) => [...prev, { from: "bot", text: botReply }]);
   }
 };
+
 
 
 
