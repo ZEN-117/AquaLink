@@ -24,12 +24,11 @@ export default function ManageTransactions() {
     date: new Date().toISOString().slice(0, 10),
   });
 
-  const ownerHeaders = { headers: { "x-role": "owner" } };
   const base = "http://localhost:5000";
 
   const getList = async () => {
     try {
-      const { data } = await axios.get(`${base}/api/transactions`, ownerHeaders);
+      const { data } = await axios.get(`${base}/api/transactions`);
       setItems(data);
     } catch (e) {
       toast.error(e?.response?.data?.error || "Failed to fetch transactions");
@@ -52,10 +51,10 @@ export default function ManageTransactions() {
       };
 
       if (editing) {
-        await axios.patch(`${base}/api/transactions/${editing._id}`, payload, ownerHeaders);
+        await axios.patch(`${base}/api/transactions/${editing._id}`, payload);
         toast.success("Transaction updated");
       } else {
-        await axios.post(`${base}/api/transactions`, payload, ownerHeaders);
+        await axios.post(`${base}/api/transactions`, payload);
         toast.success("Transaction created");
       }
 
@@ -89,7 +88,7 @@ export default function ManageTransactions() {
   const onDelete = async (id) => {
     if (!confirm("Delete this transaction?")) return;
     try {
-      await axios.delete(`${base}/api/transactions/${id}`, ownerHeaders);
+      await axios.delete(`${base}/api/transactions/${id}`);
       toast.success("Deleted");
       getList();
     } catch (e) {

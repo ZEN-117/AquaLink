@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -10,88 +9,93 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  User,
-  DollarSign,
-  BarChart3,
+import { useAuth } from "../contexts/AuthContext";
+import { 
+  User, 
+  DollarSign, 
+  BarChart3, 
   LogOut,
   ShoppingBag,
   HouseIcon,
   Fish,
-  ChevronDown,
+  ChevronDown // 👉 Added for finance dropdown arrow
 } from "lucide-react";
 
-const mainItems = [
-  {
-    title: "Manage Gigs",
-    url: "/dashboard/gigs",
+import { useEffect, useMemo, useState } from "react"; // 👉 Needed for finance expand/collapse logic
+
+const menuItems = [
+  { 
+    title: "Manage Gigs", 
+    url: "/dashboard/gigs", 
     icon: ShoppingBag,
-    description: "Add and manage your guppy listings",
-    exact: true,
   },
-  {
-    title: "Profile",
-    url: "/dashboard/profile",
+  { 
+    title: "Profile", 
+    url: "/dashboard/profile", 
     icon: User,
-    description: "Manage your account settings",
-    exact: true,
   },
-  {
-    title: "Finances",
-    url: "/dashboard/finances",
+  { 
+    title: "Finances", 
+    url: "/dashboard/finances", 
     icon: DollarSign,
-    description: "Track earnings and payments",
-    isFinanceParent: true,
+    isFinanceParent: true, 
   },
-  {
-    title: "Analytics",
-    url: "/dashboard/analytics",
+  { 
+    title: "Fish Stock", 
+    url: "/dashboard/stock", 
     icon: BarChart3,
-    description: "View fish sales analytics",
-    exact: true,
+  },
+   { 
+    title: "Inventory", 
+    url: "/dashboard/inventory", 
+    icon: BarChart3,
   },
 ];
 
+// 👉 Finance children added
 const financeChildren = [
   {
     title: "Transactions",
     url: "/dashboard/finances/transactions",
     icon: DollarSign,
-    description: "Create & edit CR/DR entries",
   },
   {
     title: "Salaries",
     url: "/dashboard/finances/salaries",
     icon: DollarSign,
-    description: "Payroll & auto-calculations",
   },
   {
     title: "My Payments",
     url: "/dashboard/finances/mypayments",
     icon: DollarSign,
-    description: "Buyer order payments",
   },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
-  const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const currentPath = location.pathname;
+  const collapsed = state === "collapsed";
 
-  // Parent looks active on any finance route
+  const isActive = (path) => currentPath === path;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  // === Finance-specific logic (from friend’s code) ===
   const isOnFinances = useMemo(
     () => location.pathname.startsWith("/dashboard/finances"),
     [location.pathname]
   );
 
-  // Expand when on finance pages
   const [openFinances, setOpenFinances] = useState(isOnFinances);
   useEffect(() => {
     if (isOnFinances) setOpenFinances(true);
   }, [isOnFinances]);
-
-  const handleLogout = () => navigate("/");
 
   const handleFinanceClick = (e) => {
     e.preventDefault();
@@ -102,15 +106,15 @@ export function AppSidebar() {
     setOpenFinances((p) => !p);
     navigate("/dashboard/finances");
   };
+  // === End finance-specific logic ===
 
   return (
     <Sidebar
-      className={`${
-        collapsed ? "w-14" : "w-64"
-      } transition-all duration-300 border-r border-aqua/10 flex flex-col`}
+      className={`${collapsed ? "w-14" : "w-64"} transition-all duration-300 border-r border-aqua/10 flex flex-col`}
     >
       <SidebarContent className="bg-gradient-to-b from-background to-background/95 flex flex-col flex-1">
-        {/* Logo */}
+        
+        {/* Logo Section */}
         <div className="p-4 border-b border-aqua/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-aqua rounded-lg flex items-center justify-center">
@@ -119,18 +123,19 @@ export function AppSidebar() {
             {!collapsed && (
               <NavLink to="/dashboard" className="flex flex-col w-36 h-auto">
                 <h2 className="font-bold text-xl text-foreground">AquaLink</h2>
-                <p className="text-sm text-muted-foreground">Dashboard</p>
+                <p className="text-sm text-muted-foreground">Owner Dashboard</p>
               </NavLink>
             )}
           </div>
         </div>
 
-        {/* Menu */}
+        {/* Main menu */}
         <SidebarGroup className="px-2 flex-1">
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
-              {mainItems.map((item) => {
+              {menuItems.map((item) => {
                 if (item.isFinanceParent) {
+                  // === Finance parent with dropdown ===
                   const parentActive = isOnFinances;
 
                   return (
@@ -151,23 +156,12 @@ export function AppSidebar() {
                         <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                         {!collapsed && (
                           <div className="flex-1 min-w-0">
-                            <span className="block text-base font-medium">
-                              {item.title}
-                            </span>
-                            <span
-                              className={`block text-sm font-semibold truncate ${
-                                parentActive ? "text-white" : "text-primary"
-                              }`}
-                            >
-                              {item.description}
-                            </span>
+                            <span className="block text-base font-medium">{item.title}</span>
                           </div>
                         )}
                         {!collapsed && (
                           <ChevronDown
-                            className={`w-4 h-4 ml-2 transition-transform ${
-                              openFinances ? "rotate-180" : ""
-                            }`}
+                            className={`w-4 h-4 ml-2 transition-transform ${openFinances ? "rotate-180" : ""}`}
                           />
                         )}
                       </a>
@@ -182,25 +176,14 @@ export function AppSidebar() {
                                   className={`flex items-center p-3 rounded-lg min-h-[48px] transition-all duration-200 hover-scale cursor-pointer ml-6
                                     ${
                                       isActive
-                                        ? // === same highlight as parent ===
-                                          "bg-gradient-to-r from-primary to-black text-background font-medium shadow-sm"
+                                        ? "bg-gradient-to-r from-primary to-black text-background font-medium shadow-sm"
                                         : "hover:bg-aqua/5 text-foreground"
                                     }`}
                                 >
-                                  <child.icon
-                                    className={`w-4 h-4 mr-3 flex-shrink-0 ${
-                                      isActive ? "text-background" : ""
-                                    }`}
-                                  />
+                                  <child.icon className={`w-4 h-4 mr-3 flex-shrink-0 ${isActive ? "text-background" : ""}`} />
                                   <div className="flex-1 min-w-0">
-                                    <span className="block text-sm font-medium">
-                                      {child.title}
-                                    </span>
-                                    <span
-                                      className={`block text-xs truncate ${
-                                        isActive ? "text-background/80" : "text-primary"
-                                      }`}
-                                    >
+                                    <span className="block text-sm font-medium">{child.title}</span>
+                                    <span className={`block text-xs truncate ${isActive ? "text-background/80" : "text-primary"}`}>
                                       {child.description}
                                     </span>
                                   </div>
@@ -214,32 +197,21 @@ export function AppSidebar() {
                   );
                 }
 
-                // Normal items
+                // === Normal items remain same ===
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <NavLink to={item.url} end={item.exact !== false}>
+                    <NavLink to={item.url} end>
                       {({ isActive }) => (
                         <div
                           className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
-                            ${
-                              isActive
-                                ? "bg-gradient-to-r from-primary to-black text-background font-medium"
-                                : "hover:bg-aqua/10 hover:text-aqua text-foreground"
-                            }`}
+                            ${isActive
+                              ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                              : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
                         >
                           <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                           {!collapsed && (
                             <div className="flex-1 min-w-0">
-                              <span className="block text-base font-medium">
-                                {item.title}
-                              </span>
-                              <span
-                                className={`block text-sm font-semibold truncate ${
-                                  isActive ? "text-white" : "text-primary"
-                                }`}
-                              >
-                                {item.description}
-                              </span>
+                              <span className="block text-base font-medium">{item.title}</span>
                             </div>
                           )}
                         </div>
@@ -252,29 +224,23 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Footer */}
+        {/* Footer actions */}
         <div className="border-t border-aqua/10 p-2">
           <SidebarMenu className="space-y-2">
+            {/* Back to home */}
             <SidebarMenuItem>
               <NavLink to="/" end>
                 {({ isActive }) => (
                   <div
                     className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all hover:bg-primary/10 duration-200 hover-scale cursor-pointer
-                      ${
-                        isActive
-                          ? "bg-gradient-to-r from-primary to-black text-background font-medium"
-                          : "hover:bg-aqua/10 hover:text-aqua text-foreground"
-                      }`}
+                      ${isActive
+                        ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                        : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
                   >
                     <HouseIcon className="w-5 h-5 mr-3 flex-shrink-0" />
                     {!collapsed && (
                       <div className="flex-1 min-w-0">
-                        <span className="block text-base font-medium">
-                          Back to Home
-                        </span>
-                        <span className="block text-sm text-primary">
-                          Visit home page
-                        </span>
+                        <span className="block text-base font-medium">Back to Home</span>
                       </div>
                     )}
                   </div>
@@ -282,6 +248,7 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuItem>
 
+            {/* Logout button */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={handleLogout}
@@ -291,9 +258,6 @@ export function AppSidebar() {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <span className="block text-base font-medium">Logout</span>
-                    <span className="text-red-500 block text-sm text-muted-foreground">
-                      Sign out of your account
-                    </span>
                   </div>
                 )}
               </SidebarMenuButton>

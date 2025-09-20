@@ -7,14 +7,8 @@ export default function MyPayments() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    // TEMP headers until you wire real auth/roles
     axios
-      .get("http://localhost:5000/api/buyer/payments", {
-        headers: {
-          "x-role": "buyer",
-          "x-buyer-id": "buyer-001", // change to the logged-in buyer's id
-        },
-      })
+      .get("http://localhost:5000/api/buyer/payments")
       .then(({ data }) => setItems(data))
       .catch(() => setItems([]));
   }, []);

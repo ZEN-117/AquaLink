@@ -15,7 +15,6 @@ const ETF_RATE = 0.03; // 3% employer (usually NOT deducted from net)
 const INCLUDE_ETF_IN_NET = false; // set true if you still want ETF deducted from net
 
 const BASE_URL = "http://localhost:5000";
-const OWNER_HEADERS = { headers: { "x-role": "owner" } };
 
 export default function SalaryManagement() {
   const [items, setItems] = useState([]);
@@ -71,7 +70,7 @@ export default function SalaryManagement() {
 
   const getList = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/api/salaries`, OWNER_HEADERS);
+      const { data } = await axios.get(`${BASE_URL}/api/salaries`);
       setItems(data);
     } catch {
       toast.error("Failed to fetch salaries");
@@ -99,8 +98,7 @@ export default function SalaryManagement() {
           etf: Number(form.etf),
           loan: Number(form.loan),
           tax: Number(form.tax),
-        },
-        OWNER_HEADERS
+        }
       );
       toast.success("Salary run saved");
       setShowForm(false);
@@ -127,7 +125,7 @@ export default function SalaryManagement() {
   const onDelete = async (id) => {
     if (!confirm("Delete salary record?")) return;
     try {
-      await axios.delete(`${BASE_URL}/api/salaries/${id}`, OWNER_HEADERS);
+      await axios.delete(`${BASE_URL}/api/salaries/${id}`);
       toast.success("Deleted");
       getList();
     } catch {
