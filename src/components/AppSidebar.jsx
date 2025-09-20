@@ -9,46 +9,79 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { 
-  User, 
-  DollarSign, 
-  BarChart3, 
+import {
+  User,
+  DollarSign,
+  BarChart3,
   LogOut,
   ShoppingBag,
   HouseIcon,
-  Fish
+  Fish,
 } from "lucide-react";
 
 const menuItems = [
-  { 
-    title: "Manage Gigs", 
-    url: "/dashboard/gigs", 
+  {
+    title: "Manage Gigs",
+    url: "/dashboard/gigs",
     icon: ShoppingBag,
-    description: "Add and manage your guppy listings"
+    description: "Add and manage your guppy listings",
+    exact: true,
   },
-  { 
-    title: "Profile", 
-    url: "/dashboard/profile", 
+  {
+    title: "Profile",
+    url: "/dashboard/profile",
     icon: User,
-    description: "Manage your account settings"
+    description: "Manage your account settings",
+    exact: true,
   },
-  { 
-    title: "Finances", 
-    url: "/dashboard/finances", 
+  {
+    title: "Finances",
+    url: "/dashboard/finances",
     icon: DollarSign,
-    description: "Track earnings and payments"
+    description: "Track earnings and payments",
+    // not exact -> keeps Finances highlighted on subroutes
+    exact: false,
   },
-  { 
-    title: "Analytics", 
-    url: "/dashboard/analytics", 
+  // --- NEW finance sub-links ---
+  {
+    title: "• Transactions",
+    url: "/dashboard/finances/transactions",
+    icon: DollarSign,
+    description: "Create & edit CR/DR entries",
+    exact: true,
+    isChild: true,
+  },
+  {
+    title: "• Salaries",
+    url: "/dashboard/finances/salaries",
+    icon: DollarSign,
+    description: "Payroll & auto-calculations",
+    exact: true,
+    isChild: true,
+  },
+  {
+    title: "• My Payments",
+    url: "/dashboard/finances/mypayments",
+    icon: DollarSign,
+    description: "Buyer order payments",
+    exact: true,
+    isChild: true,
+  },
+  // -----------------------------
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
     icon: BarChart3,
-    description: "View fish sales analytics"
+    description: "View fish sales analytics",
+    exact: true,
   },
-  { 
-    title: "Back to Home", 
-    url: "/", 
+  {
+    title: "Back to Home",
+    url: "/",
     icon: HouseIcon,
-    description: "Visit home page"
+    description: "Visit home page",
+    exact: true,
+    footer: true,
   },
 ];
 
@@ -59,18 +92,17 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
-  const isActive = (path) => currentPath === path;
-
   const handleLogout = () => {
     navigate("/");
   };
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-14" : "w-64"} transition-all duration-300 border-r border-aqua/10 flex flex-col`}
+      className={`${
+        collapsed ? "w-14" : "w-64"
+      } transition-all duration-300 border-r border-aqua/10 flex flex-col`}
     >
       <SidebarContent className="bg-gradient-to-b from-background to-background/95 flex flex-col flex-1">
-        
         {/* Logo Section */}
         <div className="p-4 border-b border-aqua/10">
           <div className="flex items-center gap-3">
@@ -91,21 +123,27 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
               {menuItems
-                .filter((item) => item.title !== "Back to Home") 
+                .filter((item) => !item.footer) // main list only
                 .map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <NavLink to={item.url} end>
+                    <NavLink to={item.url} end={item.exact !== false /* default true */}>
                       {({ isActive }) => (
                         <div
                           className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
-                            ${isActive
-                              ? "bg-gradient-to-r from-primary to-black text-background font-medium"
-                              : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
+                            ${
+                              isActive
+                                ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                                : "hover:bg-aqua/10 hover:text-aqua text-foreground"
+                            }
+                            ${item.isChild ? (collapsed ? "pl-3" : "pl-10") : ""}
+                          `}
                         >
                           <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                           {!collapsed && (
                             <div className="flex-1 min-w-0">
-                              <span className="block text-base font-medium">{item.title}</span>
+                              <span className="block text-base font-medium">
+                                {item.title}
+                              </span>
                               <span
                                 className={`block text-sm font-semibold truncate ${
                                   isActive ? "text-white" : "text-primary"
@@ -128,26 +166,36 @@ export function AppSidebar() {
         <div className="border-t border-aqua/10 p-2">
           <SidebarMenu className="space-y-2">
             {/* Back to home */}
-            <SidebarMenuItem>
-              <NavLink to="/" end>
-                {({ isActive }) => (
-                  <div
-                    className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all hover:bg-primary/10 duration-200 hover-scale cursor-pointer
-                      ${isActive
-                        ? "bg-gradient-to-r from-primary to-black text-background font-medium"
-                        : "hover:bg-aqua/10 hover:text-aqua text-foreground"}`}
-                  >
-                    <HouseIcon className="w-5 h-5 mr-3 flex-shrink-0" />
-                    {!collapsed && (
-                      <div className="flex-1 min-w-0">
-                        <span className="block text-base font-medium">Back to Home</span>
-                        <span className="block text-sm text-primary">Visit home page</span>
+            {menuItems
+              .filter((i) => i.footer && i.url === "/")
+              .map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <NavLink to={item.url} end>
+                    {({ isActive }) => (
+                      <div
+                        className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all hover:bg-primary/10 duration-200 hover-scale cursor-pointer
+                          ${
+                            isActive
+                              ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                              : "hover:bg-aqua/10 hover:text-aqua text-foreground"
+                          }`}
+                      >
+                        <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                        {!collapsed && (
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-base font-medium">
+                              {item.title}
+                            </span>
+                            <span className="block text-sm text-primary">
+                              {item.description}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
-              </NavLink>
-            </SidebarMenuItem>
+                  </NavLink>
+                </SidebarMenuItem>
+              ))}
 
             {/* Logout button */}
             <SidebarMenuItem>
