@@ -10,33 +10,46 @@ const ChatBot = () => {
 
   // Predefined FAQ responses
   const faqAnswers = {
-    "available guppies": "We have Moscow, Delta, and Rainbow guppies.",
-    "payment methods": "You can pay via PayPal, Credit Card, or Bank Transfer.",
-    "shipping": "We deliver across the USA within 3-5 business days.",
-    "order status": "You can track your orders in your dashboard under 'Manage Orders'.",
-    "care tips": "Keep water clean, maintain temperature 24-26°C, and feed twice daily."
-  };
+  "available guppies": "We have Moscow, Delta, and Rainbow guppies.",
+  "moscow": "Moscow guppies are available in stock.",
+  "delta": "Delta guppies are available in stock.",
+  "rainbow": "Rainbow guppies are available in stock.",
+  "payment": "You can pay via PayPal, Credit Card, or Bank Transfer.",
+  "shipping": "We deliver across the USA within 3-5 business days.",
+  "order": "Track your orders in your dashboard under 'Manage Orders'.",
+  "care": "Keep water clean, maintain temperature 24-26°C, and feed twice daily."
+};
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
 
-    const userMessage = input.trim();
-    setMessages([...messages, { from: "user", text: userMessage }]);
-    setInput("");
+ const sendMessage = async () => {
+  if (!input.trim()) return;
 
-    const lowerCaseMessage = userMessage.toLowerCase();
-    let response = "Sorry, I didn't understand that. Please ask about guppies, orders, or shipping.";
+  const userMessage = input.trim();
+  setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
+  setInput("");
 
-    Object.keys(faqAnswers).forEach(key => {
-      if (lowerCaseMessage.includes(key)) {
-        response = faqAnswers[key];
-      }
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage }),
     });
 
-    setTimeout(() => {
-      setMessages(prev => [...prev, { from: "bot", text: response }]);
-    }, 800);
-  };
+    const data = await res.json();
+
+    setMessages((prev) => [
+      ...prev,
+      { from: "bot", text: data.reply || "Sorry, I didn't understand that." },
+    ]);
+  } catch (err) {
+    setMessages((prev) => [
+      ...prev,
+      { from: "bot", text: "⚠️ Sorry, something went wrong. Try again later." },
+    ]);
+  }
+};
+
+
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") sendMessage();
