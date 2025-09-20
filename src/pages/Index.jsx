@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
 import AboutSection from "@/components/AboutSection";
 import ContactSection from "@/components/ContactSection";
+import ChatBot from "@/components/ChatBot";
+
 
 const Index = () => {
   const location = useLocation();
@@ -30,8 +32,11 @@ const Index = () => {
         <HeroSlider />
         <AboutSection />
         <ContactSection />
+        
       </main>
       <Footer />
+
+      <ChatBot />
     </div>
   );
 };
