@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 const API_BASE = "/api";
 
 function authHeader() {
+  // DEMO ONLY. Replace with your real JWT header when ready.
   const token = localStorage.getItem("demo_token") || "OWNER:owner1";
   return { Authorization: `Bearer ${token}` };
 }
