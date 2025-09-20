@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,46 @@ import { Badge } from "@/components/ui/badge";
 import { Camera, Mail, Phone, MapPin, Calendar, Star } from "lucide-react";
 
 const UserProfile = () => {
+  const [firstName, setFirstName] = useState("John");
+  const [lastName, setLastName] = useState("Doe");
+  const [email, setEmail] = useState("john.doe@email.com");
+  const [phone, setPhone] = useState("+1 (555) 123-4567");
+  const [location, setLocation] = useState("California, USA");
+  const [bio, setBio] = useState("Passionate guppy breeder with over 5 years of experience. Specializing in premium bloodlines including Moscow, Delta, and Rainbow varieties. All fish are carefully bred in optimal conditions with health guarantees.");
+
+  const handleDeleteProfile = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your profile? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem("token"); // adjust if using different auth
+      const response = await fetch("http://localhost:5000/api/users/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }), // send current user email
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Profile deleted successfully!");
+        // Redirect to homepage or login page
+        window.location.href = "/";
+      } else {
+        alert(data.message || "Failed to delete profile.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred. Please try again.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -32,7 +73,7 @@ const UserProfile = () => {
                 <Camera className="w-4 h-4" />
               </Button>
             </div>
-            <CardTitle className="mt-4">John Doe</CardTitle>
+            <CardTitle className="mt-4">{firstName} {lastName}</CardTitle>
             <CardDescription>Premium Guppy Breeder</CardDescription>
             <div className="flex items-center justify-center gap-1 mt-2">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -44,15 +85,15 @@ const UserProfile = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-aqua" />
-                <span>john.doe@email.com</span>
+                <span>{email}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="w-4 h-4 text-aqua" />
-                <span>+1 (555) 123-4567</span>
+                <span>{phone}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-aqua" />
-                <span>California, USA</span>
+                <span>{location}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4 text-aqua" />
@@ -88,7 +129,8 @@ const UserProfile = () => {
                   <Label htmlFor="firstName">First Name</Label>
                   <Input 
                     id="firstName" 
-                    defaultValue="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
@@ -96,7 +138,8 @@ const UserProfile = () => {
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input 
                     id="lastName" 
-                    defaultValue="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
@@ -107,7 +150,8 @@ const UserProfile = () => {
                 <Input 
                   id="email" 
                   type="email"
-                  defaultValue="john.doe@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="border-aqua/20 focus:border-aqua text-base"
                 />
               </div>
@@ -117,7 +161,8 @@ const UserProfile = () => {
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input 
                     id="phone" 
-                    defaultValue="+1 (555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
@@ -125,7 +170,8 @@ const UserProfile = () => {
                   <Label htmlFor="location">Location</Label>
                   <Input 
                     id="location" 
-                    defaultValue="California, USA"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     className="border-aqua/20 focus:border-aqua text-base"
                   />
                 </div>
@@ -139,9 +185,9 @@ const UserProfile = () => {
                 <Label htmlFor="bio">Bio/Description</Label>
                 <Textarea 
                   id="bio"
-                  placeholder="Tell potential buyers about your breeding experience, specialties, and what makes your guppies special..."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
                   rows={4}
-                  defaultValue="Passionate guppy breeder with over 5 years of experience. Specializing in premium bloodlines including Moscow, Delta, and Rainbow varieties. All fish are carefully bred in optimal conditions with health guarantees."
                   className="border-aqua/20 focus:border-aqua text-base"
                 />
               </div>
@@ -149,7 +195,7 @@ const UserProfile = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-4 pt-4">
-              <Button className="bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105" >
+              <Button className="bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105">
                 Save Changes
               </Button>
               <Button
@@ -157,6 +203,13 @@ const UserProfile = () => {
                 className="border-aqua/20 hover:bg-aqua/60 transition-transform duration-200 hover:scale-105"
               >
                 Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                onClick={handleDeleteProfile}
+              >
+                Delete Profile
               </Button>
             </div>
           </CardContent>
