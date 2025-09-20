@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 
-const chatbot = () => {
+const ChatBot = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { from: "bot", text: "Hello! Welcome to AquaLink 🐠 How can I help you today?" }
@@ -122,4 +122,4 @@ const chatbot = () => {
   );
 };
 
-export default chatbot;
+export default ChatBot;
