@@ -1,22 +1,19 @@
 import { Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-
-// Existing dashboard pages
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import ManageGigs from "@/components/dashboard/ManageGigs";
 import UserProfile from "@/components/dashboard/UserProfile";
 import FinanceManagement from "@/components/dashboard/FinanceManagement";
 import FishAnalytics from "@/components/dashboard/FishAnalytics";
-
-// NEW: finance sub-pages (CRUD + buyer view)
-import ManageTransactions from "@/pages/Finance/ManageTransactions";
-import SalaryManagement from "@/pages/Finance/SalaryManagement";
-import MyPayments from "@/pages/Finance/MyPayments";
-
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+// ⤵️ NEW: import finance sub-pages
+import ManageTransactions from "@/pages/Finance/ManageTransactions";
+import SalaryManagement from "@/pages/Finance/SalaryManagement";
+import MyPayments from "@/pages/Finance/MyPayments";
 
 const Dashboard = () => {
   return (
@@ -61,17 +58,17 @@ const Dashboard = () => {
           <main className="flex-1 overflow-auto">
             <div className="p-6 animate-fade-in">
               <Routes>
-                {/* overview & existing sections */}
                 <Route index element={<DashboardOverview />} />
                 <Route path="gigs" element={<ManageGigs />} />
                 <Route path="profile" element={<UserProfile />} />
+                {/* Finance overview */}
                 <Route path="finances" element={<FinanceManagement />} />
-                <Route path="analytics" element={<FishAnalytics />} />
-
-                {/* finance sub-routes */}
+                {/* ⤵️ Finance sub-pages (so /dashboard/finances/* work) */}
                 <Route path="finances/transactions" element={<ManageTransactions />} />
                 <Route path="finances/salaries" element={<SalaryManagement />} />
                 <Route path="finances/mypayments" element={<MyPayments />} />
+
+                <Route path="analytics" element={<FishAnalytics />} />
               </Routes>
             </div>
           </main>
