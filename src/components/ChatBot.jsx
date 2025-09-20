@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 
-const ChatBot = () => {
+const chatbot = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hello! Welcome to AquaLink 🐠 How can I help you today?" },
+    { from: "bot", text: "Hello! Welcome to AquaLink 🐠 How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
 
@@ -14,7 +14,7 @@ const ChatBot = () => {
     "payment methods": "You can pay via PayPal, Credit Card, or Bank Transfer.",
     "shipping": "We deliver across the USA within 3-5 business days.",
     "order status": "You can track your orders in your dashboard under 'Manage Orders'.",
-    "care tips": "Keep water clean, maintain temperature 24-26°C, and feed twice daily.",
+    "care tips": "Keep water clean, maintain temperature 24-26°C, and feed twice daily."
   };
 
   const sendMessage = () => {
@@ -27,14 +27,14 @@ const ChatBot = () => {
     const lowerCaseMessage = userMessage.toLowerCase();
     let response = "Sorry, I didn't understand that. Please ask about guppies, orders, or shipping.";
 
-    Object.keys(faqAnswers).forEach((key) => {
+    Object.keys(faqAnswers).forEach(key => {
       if (lowerCaseMessage.includes(key)) {
         response = faqAnswers[key];
       }
     });
 
     setTimeout(() => {
-      setMessages((prev) => [...prev, { from: "bot", text: response }]);
+      setMessages(prev => [...prev, { from: "bot", text: response }]);
     }, 800);
   };
 
@@ -50,17 +50,19 @@ const ChatBot = () => {
           <div className="flex justify-between items-center border-b border-aqua/20 pb-2 mb-2">
             <span className="font-semibold text-primary">AquaLink Chat</span>
             <button onClick={() => setOpen(false)}>
-              <X className="w-5 h-5 text-muted-foreground" />
+              <X className="w-5 h-5 text-muted-foreground"/>
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-auto mb-2 space-y-2">
+          <div className="flex-1 overflow-auto mb-2 space-y-2 chatbot-messages">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`px-3 py-2 rounded-lg max-w-[75%] ${
-                  msg.from === "bot" ? "bg-aqua/20 text-black self-start" : "bg-primary text-white self-end"
+                className={`px-3 py-2 rounded-lg max-w-[75%] break-words ${
+                  msg.from === "bot"
+                    ? "bg-aqua/20 text-black self-start"
+                    : "bg-primary text-white self-end"
                 }`}
               >
                 {msg.text}
@@ -78,7 +80,10 @@ const ChatBot = () => {
               placeholder="Type your message..."
               className="flex-1 border border-aqua/20 rounded px-2 py-1 focus:outline-none focus:border-primary"
             />
-            <button onClick={sendMessage} className="bg-primary px-3 rounded text-white hover:opacity-90 transition">
+            <button
+              onClick={sendMessage}
+              className="bg-primary px-3 rounded text-white hover:opacity-90 transition"
+            >
               Send
             </button>
           </div>
@@ -90,10 +95,31 @@ const ChatBot = () => {
         className="w-12 h-12 rounded-full bg-accent flex items-center justify-center shadow-lg hover:bg-aqua transition"
         onClick={() => setOpen(!open)}
       >
-        <MessageCircle className="w-6 h-6 text-white" />
+        <MessageCircle className="w-6 h-6 text-white"/>
       </button>
+
+      {/* Extra CSS for smooth scroll, fade-in, and custom scrollbar */}
+      <style jsx>{`
+        .chatbot-messages {
+          scroll-behavior: smooth;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+        .chatbot-messages::-webkit-scrollbar {
+          width: 6px;
+        }
+        .chatbot-messages::-webkit-scrollbar-thumb {
+          background-color: rgba(100, 108, 255, 0.5);
+          border-radius: 3px;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default ChatBot;
+export default chatbot;
