@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Fish, Eye, EyeOff } from "lucide-react";
+import axios from "axios";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,12 +13,43 @@ const SignIn = () => {
     email: "",
     password: ""
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just navigate to dashboard (placeholder for real auth)
-    navigate("/dashboard");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/users/login", formData);
+
+      // Backend sends token
+      const token = response.data?.token;
+      console.log("Received token:", token);
+
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+
+      // Navigate to dashboard on success
+      console.log(response.data);
+      const user = response.data.role;
+      console.log("Role:", user);
+
+      if (user === "User") {
+        navigate("/userdashboard");
+      } else if (user === "admin") {
+        navigate("/dashboard");
+      }
+
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -38,7 +70,7 @@ const SignIn = () => {
             <div>
               <CardTitle className="text-2xl font-bold text-foreground">Welcome Back</CardTitle>
               <CardDescription className="text-muted-foreground">
-                Sign in to your AquaLink account
+                Sign in to your AquaFlow account
               </CardDescription>
             </div>
           </CardHeader>
@@ -86,6 +118,8 @@ const SignIn = () => {
                   </Button>
                 </div>
               </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               
               <div className="flex items-center justify-between">
                 <Link 
@@ -98,8 +132,9 @@ const SignIn = () => {
               
               <Button
                 type="submit"
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105">
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
             
