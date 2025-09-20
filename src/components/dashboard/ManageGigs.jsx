@@ -340,9 +340,8 @@ const getCurrentStockForGig = (gig) => {
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span>Code: {gig.productCode}</span>
                         <span>Stock: {getCurrentStockForGig(gig)}</span>
-                        <span>Views: {gig.views}</span>
-                        <span>Orders: {gig.orders}</span>
                       </div>
                     </div>
                   </div>

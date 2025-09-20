@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Fish, Menu, X, User, ShoppingCart } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem("token"));
-  const [role, setRole] = useState(() => localStorage.getItem("role"));
+  const { isAuthenticated, user, role, logout } = useAuth();
 
   const scrollToSection = (sectionId) => {
     if (location.pathname !== "/") {
@@ -27,18 +27,9 @@ const Header = () => {
     { name: "Contact", action: () => scrollToSection("contact") },
   ];
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedRole = localStorage.getItem("role");
-    setIsAuthenticated(!!token);
-    setRole(storedRole || null);
-  }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    setIsAuthenticated(false);
-    setRole(null);
+    logout();
     navigate("/");
   };
 
@@ -109,7 +100,7 @@ const Header = () => {
                 <Button variant="ghost" size="sm" asChild>
                   <Link to={role === "admin" ? "/dashboard" : "/userdashboard"}>
                     <User className="h-4 w-4 mr-2" />
-                    {role === "admin" ? "Admin" : "Dashboard"}
+                    {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
                   </Link>
                 </Button>
                 <Button variant="destructive" size="sm" onClick={handleLogout}>
@@ -179,7 +170,7 @@ const Header = () => {
                     <Button variant="ghost" size="sm" className="justify-start" asChild>
                       <Link to={role === "admin" ? "/dashboard" : "/userdashboard"} onClick={() => setIsMenuOpen(false)}>
                         <User className="h-4 w-4 mr-2" />
-                        {role === "admin" ? "Admin" : "Dashboard"}
+                        {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
                       </Link>
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>

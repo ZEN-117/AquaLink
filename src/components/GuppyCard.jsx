@@ -23,6 +23,7 @@ const GuppyCard = ({
   rarity,
   inStock,
   features,
+  productCode,
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -112,6 +113,13 @@ const GuppyCard = ({
           <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
             {category}
           </p>
+
+          {/* Product Code */}
+          {productCode && (
+            <p className="text-xs text-muted-foreground mb-1 font-mono">
+              Code: {productCode}
+            </p>
+          )}
 
           {/* Name */}
           <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">

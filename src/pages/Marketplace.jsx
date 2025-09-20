@@ -79,6 +79,7 @@ const Marketplace = () => {
     rarity: "Common",
     inStock: getCurrentStock(p),
     features: [],
+    productCode: p.productCode,
   }));
 
   const filteredGuppies = liveItems.filter(guppy => {
