@@ -10,12 +10,17 @@ import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// ⤵️ NEW: import finance sub-pages
+import ManageTransactions from "@/pages/Finance/ManageTransactions";
+import SalaryManagement from "@/pages/Finance/SalaryManagement";
+import MyPayments from "@/pages/Finance/MyPayments";
+
 const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        
+
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="h-16 border-b border-aqua/10 bg-background/95 backdrop-blur-sm sticky top-0 z-40">
@@ -24,21 +29,21 @@ const Dashboard = () => {
                 <SidebarTrigger className="hover:bg-aqua/10 hover:text-aqua transition-colors" />
                 <div className="relative max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input 
-                    placeholder="Search guppies, orders, analytics..." 
+                  <Input
+                    placeholder="Search guppies, orders, analytics..."
                     className="pl-10 border-aqua/20 focus:border-aqua bg-background/50"
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="hover:bg-aqua/10 hover:text-aqua transition-colors p-2"
                 >
                   <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
-                    <Bell className="w-5 h-5 text-black " />
+                    <Bell className="w-5 h-5 text-black" />
                   </div>
                 </Button>
 
@@ -56,7 +61,13 @@ const Dashboard = () => {
                 <Route index element={<DashboardOverview />} />
                 <Route path="gigs" element={<ManageGigs />} />
                 <Route path="profile" element={<UserProfile />} />
+                {/* Finance overview */}
                 <Route path="finances" element={<FinanceManagement />} />
+                {/* ⤵️ Finance sub-pages (so /dashboard/finances/* work) */}
+                <Route path="finances/transactions" element={<ManageTransactions />} />
+                <Route path="finances/salaries" element={<SalaryManagement />} />
+                <Route path="finances/mypayments" element={<MyPayments />} />
+
                 <Route path="analytics" element={<FishAnalytics />} />
               </Routes>
             </div>
