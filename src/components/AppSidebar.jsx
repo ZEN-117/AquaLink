@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "../contexts/AuthContext";
 import { 
   User, 
   DollarSign, 
@@ -51,12 +52,14 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
   const isActive = (path) => currentPath === path;
 
   const handleLogout = () => {
+    logout();
     navigate("/");
   };
 

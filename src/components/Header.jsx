@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Fish, Menu, X, User, ShoppingCart } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, user, role, logout } = useAuth();
 
   const scrollToSection = (sectionId) => {
     if (location.pathname !== "/") {
@@ -24,6 +26,12 @@ const Header = () => {
     { name: "Marketplace", href: "/marketplace" },
     { name: "Contact", action: () => scrollToSection("contact") },
   ];
+
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -75,15 +83,31 @@ const Header = () => {
                 </span>
               </Link>
             </Button>
-            <Button variant="black" size="sm" className="text-base text-white" asChild>
-              <Link to="/signin">
-                <User className="h-4 w-4 mr-2 text-white" />
-                Sign In
-              </Link>
-            </Button>
-            <Button variant="ocean" size="sm" className="text-base" asChild>
-              <Link to="/signup">Sign Up</Link>
-            </Button>
+            {!isAuthenticated ? (
+              <>
+                <Button variant="black" size="sm" className="text-base text-white" asChild>
+                  <Link to="/signin">
+                    <User className="h-4 w-4 mr-2 text-white" />
+                    Sign In
+                  </Link>
+                </Button>
+                <Button variant="ocean" size="sm" className="text-base" asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to={role === "admin" ? "/dashboard" : "/userdashboard"}>
+                    <User className="h-4 w-4 mr-2" />
+                    {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
+                  </Link>
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -129,15 +153,31 @@ const Header = () => {
                     </span>
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" className="justify-start" asChild>
-                  <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
-                    <User className="h-4 w-4 mr-2" />
-                    Sign In
-                  </Link>
-                </Button>
-                <Button variant="ocean" size="sm" asChild>
-                  <Link to="/signup" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
-                </Button>
+                {!isAuthenticated ? (
+                  <>
+                    <Button variant="ghost" size="sm" className="justify-start" asChild>
+                      <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
+                        <User className="h-4 w-4 mr-2" />
+                        Sign In
+                      </Link>
+                    </Button>
+                    <Button variant="ocean" size="sm" asChild>
+                      <Link to="/signup" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" className="justify-start" asChild>
+                      <Link to={role === "admin" ? "/dashboard" : "/userdashboard"} onClick={() => setIsMenuOpen(false)}>
+                        <User className="h-4 w-4 mr-2" />
+                        {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
+                      </Link>
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>
+                      Logout
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

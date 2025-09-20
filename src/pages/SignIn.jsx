@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Fish, Eye, EyeOff } from "lucide-react";
-import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,42 +13,23 @@ const SignIn = () => {
     email: "",
     password: ""
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+  const { login, loading, error, clearError } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    clearError();
 
-    try {
-      const response = await axios.post("http://localhost:5000/api/users/login", formData);
-
-      // Backend sends token
-      const token = response.data?.token;
-      console.log("Received token:", token);
-
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-
-      // Navigate to dashboard on success
-      console.log(response.data);
-      const user = response.data.role;
-      console.log("Role:", user);
-
-      if (user === "User") {
+    const result = await login(formData.email, formData.password);
+    
+    if (result.success) {
+      // Navigate based on role
+      if (result.role === "User") {
         navigate("/userdashboard");
-      } else if (user === "admin") {
+      } else if (result.role === "admin") {
         navigate("/dashboard");
       }
-
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
-    } finally {
-      setLoading(false);
     }
   };
 
