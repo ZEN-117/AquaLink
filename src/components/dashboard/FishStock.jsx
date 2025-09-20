@@ -29,6 +29,8 @@ const FishStock = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fishStocks, setFishStocks] = useState([]);
   const [editingFish, setEditingFish] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [formData, setFormData] = useState({
     fishCode: "",
@@ -66,42 +68,99 @@ const FishStock = () => {
     return !fishStocks.some((f) => f.fishCode.toLowerCase() === code.toLowerCase());
   };
 
-  const uploadImageToCloudinary = async (file) => {
-    const data = new FormData();
-    data.append("file", file);
-    data.append("upload_preset", "fish_stock_uploads");
+  const uploadImageToBackend = async (file) => {
+    // Validate file
+    if (!file) {
+      toast.error("No file selected");
+      return null;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return null;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return null;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
 
     try {
-      const res = await axios.post(
-        "https://api.cloudinary.com/v1_1/di8rc2p4j/image/upload",
-        data
-      );
-      return res.data.secure_url;
+      console.log("Uploading image to backend...", file.name);
+      
+      const response = await axios.post('http://localhost:5000/api/images/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+          console.log(`Upload Progress: ${percentCompleted}%`);
+        }
+      });
+      
+      console.log("Upload successful:", response.data.imageUrl);
+      return response.data.imageUrl;
     } catch (err) {
-      console.error(err);
-      toast.error("Image upload failed");
+      console.error("Backend upload error:", err);
+      console.error("Error response:", err.response?.data);
+      
+      // Handle specific error types
+      if (err.code === 'NETWORK_ERROR' || err.message.includes('Network Error')) {
+        toast.error("Network error. Please check your internet connection.");
+      } else if (err.response?.status === 400) {
+        toast.error("Invalid file format or no file provided.");
+      } else if (err.response?.status === 413) {
+        toast.error("File too large. Please choose a smaller image.");
+      } else {
+        toast.error(`Image upload failed: ${err.response?.data?.message || err.message}`);
+      }
       return null;
     }
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    
+    setIsSubmitting(true);
+    setUploadProgress(0);
+    
     try {
       if (!formData.fishCode || !formData.title || !formData.stock) {
         return toast.error("Please fill in all required fields");
       }
 
       if (!isFishCodeUnique(formData.fishCode)) {
-      return toast.error("You already added this fish Code, Try new fish Code");
-    }
+        return toast.error("You already added this fish Code, Try new fish Code");
+      }
+
+      // Handle image upload first
+      let imageUrl = null;
+      if (formData.imageFile) {
+        console.log("Starting image upload...");
+        imageUrl = await uploadImageToBackend(formData.imageFile);
+        if (!imageUrl) {
+          toast.error("Failed to upload image. Please try again.");
+          return;
+        }
+        console.log("Image uploaded successfully:", imageUrl);
+      } else if (editingFish?.image) {
+        imageUrl = editingFish.image;
+      }
 
       const payload = {
         fishCode: formData.fishCode,
         title: formData.title,
         stock: formData.stock,
-        image: formData.imageFile
-          ? await uploadImageToCloudinary(formData.imageFile)
-          : editingFish?.image || null,
+        image: imageUrl,
       };
+
+      console.log("Submitting payload:", payload);
 
       if (editingFish) {
         await axios.put(
@@ -119,8 +178,12 @@ const FishStock = () => {
       setFormData({ fishCode: "", title: "", stock: 0, imageFile: null });
       fetchFishStocks();
     } catch (err) {
-      console.error(err);
-      toast.error("Operation failed");
+      console.error("Submit error:", err);
+      console.error("Error response:", err.response?.data);
+      toast.error(`Operation failed: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress(0);
     }
   };
 
@@ -244,22 +307,54 @@ const FishStock = () => {
                   id="image"
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      // Validate file size (max 5MB)
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File size must be less than 5MB");
+                        e.target.value = ""; // Clear the input
+                        return;
+                      }
+                      // Validate file type
+                      if (!file.type.startsWith('image/')) {
+                        toast.error("Please select an image file");
+                        e.target.value = ""; // Clear the input
+                        return;
+                      }
+                    }
                     setFormData((prev) => ({
                       ...prev,
-                      imageFile: e.target.files[0],
-                    }))
-                  }
+                      imageFile: file,
+                    }));
+                  }}
                 />
+                {formData.imageFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {formData.imageFile.name} ({(formData.imageFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+                {editingFish?.image && !formData.imageFile && (
+                  <p className="text-sm text-muted-foreground">
+                    Current image: {editingFish.image.split('/').pop()}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="flex gap-2">
               <Button
                 onClick={handleSubmit}
+                disabled={isSubmitting}
                 className="bg-gradient-to-r from-primary to-black hover:opacity-90"
               >
-                {editingFish ? "Update Fish Stock" : "Create Fish Stock"}
+                {isSubmitting ? (
+                  <>
+                    {uploadProgress > 0 ? `Uploading... ${uploadProgress}%` : "Processing..."}
+                  </>
+                ) : (
+                  editingFish ? "Update Fish Stock" : "Create Fish Stock"
+                )}
               </Button>
               <Button variant="outline" onClick={() => setShowForm(false)}>
                 Cancel
