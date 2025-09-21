@@ -61,8 +61,12 @@ const SignIn = () => {
       // Navigate based on role
       if (result.role === "User") {
         navigate("/userdashboard");
-      } else if (result.role === "admin") {
+      } else if (result.role === "owner") {
         navigate("/dashboard");
+      }else if(result.role === "admin"){
+        navigate("/admindashboard");
+      }else if(result.role === "staff"){
+        navigate("/staffdashboard");
       }
     } else {
       // Error message will be shown via toast from AuthContext

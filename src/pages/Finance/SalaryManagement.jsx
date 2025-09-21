@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -21,9 +22,10 @@ export default function SalaryManagement() {
   const [showForm, setShowForm] = useState(false);
 
   const [autoContrib, setAutoContrib] = useState(true);
+  const [users, setUsers] = useState([]); // staff list for dropdown
 
   const [form, setForm] = useState({
-    staffId: "",
+    staffEmail: "",
     staffName: "",
     periodStart: "",
     periodEnd: "",
@@ -36,6 +38,31 @@ export default function SalaryManagement() {
     loan: 0,
     tax: 0,
   });
+
+  // Load salary runs
+  const getList = async () => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}/api/salaries`);
+      setItems(data);
+    } catch {
+      toast.error("Failed to fetch salaries");
+    }
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
+  // Load users (no role filter). Hide admins in the dropdown.
+  useEffect(() => {
+    axios
+      .get(`${BASE_URL}/api/users`)
+      .then(({ data }) => {
+        const list = (data || []).filter((u) => (u.role || "").toLowerCase() !== "admin");
+        setUsers(list);
+      })
+      .catch(() => setUsers([]));
+  }, []);
 
   // Auto-calc EPF/ETF when basic changes (if enabled)
   useEffect(() => {
@@ -68,42 +95,26 @@ export default function SalaryManagement() {
     return { daily, hourly, otW, otH, gross, net };
   }, [form]);
 
-  const getList = async () => {
-    try {
-      const { data } = await axios.get(`${BASE_URL}/api/salaries`);
-      setItems(data);
-    } catch {
-      toast.error("Failed to fetch salaries");
-    }
-  };
-
-  useEffect(() => {
-    getList();
-  }, []);
-
   const onSubmit = async () => {
     try {
-      if (!form.staffId || !form.staffName || !form.periodStart || !form.periodEnd || !form.basicSalary) {
+      if (!form.staffEmail || !form.staffName || !form.periodStart || !form.periodEnd || !form.basicSalary) {
         return toast.error("Fill all required fields");
       }
-      await axios.post(
-        `${BASE_URL}/api/salaries`,
-        {
-          ...form,
-          basicSalary: Number(form.basicSalary),
-          allowances: Number(form.allowances),
-          otHoursWeekday: Number(form.otHoursWeekday),
-          otHoursHoliday: Number(form.otHoursHoliday),
-          epf: Number(form.epf),
-          etf: Number(form.etf),
-          loan: Number(form.loan),
-          tax: Number(form.tax),
-        }
-      );
+      await axios.post(`${BASE_URL}/api/salaries`, {
+        ...form,
+        basicSalary: Number(form.basicSalary),
+        allowances: Number(form.allowances),
+        otHoursWeekday: Number(form.otHoursWeekday),
+        otHoursHoliday: Number(form.otHoursHoliday),
+        epf: Number(form.epf),
+        etf: Number(form.etf),
+        loan: Number(form.loan),
+        tax: Number(form.tax),
+      });
       toast.success("Salary run saved");
       setShowForm(false);
       setForm({
-        staffId: "",
+        staffEmail: "",
         staffName: "",
         periodStart: "",
         periodEnd: "",
@@ -142,10 +153,7 @@ export default function SalaryManagement() {
             Create payroll, calculate daily/hourly salaries, and record deductions
           </p>
         </div>
-        <Button
-          onClick={() => setShowForm((s) => !s)}
-          className="bg-gradient-to-r from-primary to-black"
-        >
+        <Button onClick={() => setShowForm((s) => !s)} className="bg-gradient-to-r from-primary to-black">
           <Plus className="w-4 h-4 mr-2" /> New Salary Run
         </Button>
       </div>
@@ -161,19 +169,30 @@ export default function SalaryManagement() {
           <CardContent className="space-y-4">
             {/* Staff & period */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label>Staff ID</Label>
-                <Input
-                  value={form.staffId}
-                  onChange={(e) => setForm({ ...form, staffId: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Staff Name</Label>
-                <Input
-                  value={form.staffName}
-                  onChange={(e) => setForm({ ...form, staffName: e.target.value })}
-                />
+              <div className="space-y-2 md:col-span-2">
+                <Label>Staff Email</Label>
+                <Select
+                  value={form.staffEmail}
+                  onValueChange={(email) => {
+                    const u = users.find((x) => x.email === email);
+                    const name = u ? `${u.firstName} ${u.lastName}` : "";
+                    setForm({ ...form, staffEmail: email, staffName: name });
+                  }}
+                >
+                  <SelectTrigger className="border-aqua/20">
+                    <SelectValue placeholder="Select staff" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.email} value={u.email}>
+                        {u.firstName} {u.lastName} — {u.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="text-xs text-muted-foreground">
+                  {form.staffName ? `Name: ${form.staffName}` : "Select a staff email to auto-fill name"}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Period Start</Label>
@@ -319,7 +338,7 @@ export default function SalaryManagement() {
             <CardContent className="p-4 flex items-center justify-between">
               <div>
                 <div className="font-semibold">
-                  {it.staffName} ({it.staffId})
+                  {it.staffName} ({it.staffEmail})
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {new Date(it.periodStart).toLocaleDateString()} –{" "}
@@ -347,9 +366,7 @@ export default function SalaryManagement() {
             </CardContent>
           </Card>
         ))}
-        {items.length === 0 && (
-          <div className="text-muted-foreground">No salary runs yet.</div>
-        )}
+        {items.length === 0 && <div className="text-muted-foreground">No salary runs yet.</div>}
       </div>
     </div>
   );

@@ -9,6 +9,8 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Dashboard from "./pages/Dashboard";
 import UserDashboard from "./pages/userDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import StaffDashboard from "./pages/StaffDashboard";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import {Toaster} from "react-hot-toast";
@@ -28,6 +30,8 @@ const App = () => (
         <Route path="/signin" element={<SignIn />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/userdashboard/*" element={<UserDashboard />} />
+        <Route path="/admindashboard/*" element={<AdminDashboard />} />
+        <Route path="/staffdashboard/*" element={<StaffDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </TooltipProvider>
