@@ -131,8 +131,18 @@ const FishStock = () => {
     setUploadProgress(0);
     
     try {
-      if (!formData.fishCode || !formData.title || !formData.stock) {
+      if (!formData.fishCode || !formData.title || formData.stock === "") {
         return toast.error("Please fill in all required fields");
+      }
+
+      // Validate fish code length
+      if (formData.fishCode.length > 20) {
+        return toast.error("Fish code cannot exceed 20 characters");
+      }
+
+      // Validate stock quantity
+      if (formData.stock < 0) {
+        return toast.error("Stock quantity cannot be negative");
       }
 
       if (!isFishCodeUnique(formData.fishCode)) {
@@ -277,7 +287,8 @@ const FishStock = () => {
                   id="fishCode"
                   value={formData.fishCode}
                   onChange={handleInputChange}
-                  placeholder="Enter unique fish code"
+                  placeholder="Enter unique fish code (max 20 chars)"
+                  maxLength={20}
                   className={formData.fishCode && !isFishCodeUnique(formData.fishCode) ? "border-red-500 focus:border-red-500" : ""}
                 />
                 {formData.fishCode && !isFishCodeUnique(formData.fishCode) && (
@@ -285,6 +296,11 @@ const FishStock = () => {
                 )}
                 {formData.fishCode && isFishCodeUnique(formData.fishCode) && (
                   <p className="text-sm text-green-600">Fish code is available</p>
+                )}
+                {formData.fishCode && (
+                  <p className="text-xs text-muted-foreground">
+                    {formData.fishCode.length}/20 characters
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -303,8 +319,11 @@ const FishStock = () => {
                 <Input
                   id="stock"
                   type="number"
+                  min="0"
+                  step="1"
                   value={formData.stock}
                   onChange={handleInputChange}
+                  placeholder="Enter stock quantity"
                 />
               </div>
 

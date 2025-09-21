@@ -104,6 +104,11 @@ const InventoryPage = () => {
         return toast.error("Please fill in all required fields");
       }
 
+      // Validate quantity
+      if (formData.stock <= 0) {
+        return toast.error("Quantity must be greater than 0");
+      }
+
       if (editingItem) {
         await axios.put(
           `http://localhost:5000/api/fishinventory/${editingItem._id}`,
@@ -397,7 +402,15 @@ const InventoryPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="stock">Quantity</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={handleInputChange} />
+                <Input 
+                  id="stock" 
+                  type="number" 
+                  min="1"
+                  step="1"
+                  value={formData.stock} 
+                  onChange={handleInputChange}
+                  placeholder="Enter quantity (minimum 1)"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
@@ -461,7 +474,9 @@ const InventoryPage = () => {
                 {/* Qty */}
                 <Input
                   type="number"
-                  placeholder="Qty"
+                  min="1"
+                  step="1"
+                  placeholder="Qty (min 1)"
                   value={row.qty}
                   onChange={(e) => updateAssignRow(idx, "qty", e.target.value)}
                   className="w-1/6"

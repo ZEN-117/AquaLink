@@ -27,10 +27,10 @@ const StaffSalary = () => {
   ];
 
   const benefits = [
-    { name: "Health Insurance", value: "$150/month", status: "Active", coverage: "Full Medical & Dental" },
+    { name: "Health Insurance", value: "Rs. 150/month", status: "Active", coverage: "Full Medical & Dental" },
     { name: "Retirement Plan", value: "5% Match", status: "Active", coverage: "401k with company match" },
     { name: "Paid Time Off", value: "18 days", status: "Available", coverage: "Vacation & Sick leave" },
-    { name: "Training Budget", value: "$500/year", status: "Available", coverage: "Professional development" },
+    { name: "Training Budget", value: "Rs. 500/year", status: "Available", coverage: "Professional development" },
   ];
 
   const upcomingPayments = [

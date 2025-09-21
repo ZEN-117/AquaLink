@@ -8,7 +8,7 @@ const StaffOverview = () => {
     { title: "Tasks Completed", value: "24", total: "30", progress: 80, icon: CheckSquare, color: "text-green-600" },
     { title: "Hours Worked", value: "38.5", target: "40", progress: 96, icon: Clock, color: "text-blue-600" },
     { title: "Stock Managed", value: "156", unit: "items", progress: 85, icon: Package, color: "text-purple-600" },
-    { title: "This Month Salary", value: "$3,200", status: "On Track", progress: 100, icon: DollarSign, color: "text-green-600" },
+    { title: "This Month Salary", value: "Rs. 3,200", status: "On Track", progress: 100, icon: DollarSign, color: "text-green-600" },
   ];
 
   const todaysTasks = [
