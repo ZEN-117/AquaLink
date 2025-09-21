@@ -39,11 +39,11 @@ const GuppyCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Rarity Badge */}
-      <div className="absolute top-3 left-3 z-10">
+      {/* <div className="absolute top-3 left-3 z-10">
         <Badge className={`${rarityColors[rarity]} font-medium text-xs px-2 py-1`}>
           {rarity}
         </Badge>
-      </div>
+      </div> */}
 
       {/* Favorite Button */}
       <button
@@ -83,12 +83,12 @@ const GuppyCard = ({
               isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* <div className="absolute inset-0 flex items-center justify-center">
               <Button variant="wave" size="sm" className="shadow-lg">
                 <Eye className="h-4 w-4 mr-2" />
                 Quick View
               </Button>
-            </div>
+            </div> */}
           </div>
 
           {/* Stock Indicator */}
@@ -110,9 +110,9 @@ const GuppyCard = ({
         {/* Content */}
         <div className="p-6">
           {/* Category */}
-          <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
+          {/* <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
             {category}
-          </p>
+          </p> */}
 
           {/* Product Code */}
           {productCode && (

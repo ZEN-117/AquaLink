@@ -1,18 +1,171 @@
 // src/pages/Finance/FinanceManagement.jsx
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, TrendingDown, Calendar, Download, CreditCard, Wallet } from "lucide-react";
-import { useFinanceOverview } from "@/hooks/useFinance";
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  Download,
+  CreditCard,
+  Wallet,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
+const API_BASE = "http://localhost:5000/api";
+
+// --- helpers ---
 const currency = (n) => `$${Number(n || 0).toFixed(2)}`;
 
-const FinanceManagement = () => {
-  const { data, isLoading, isError } = useFinanceOverview();
+const downloadBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
 
-  const earnings = data?.earnings || [];
+// --- main ---
+export default function FinanceManagement() {
+  const [data, setData] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [isError, setError] = useState(false);
+
+  // Withdraw modal state
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawAmt, setWithdrawAmt] = useState("");
+
+  // fetch overview
+  const fetchOverview = async () => {
+    try {
+      setError(false);
+      const r = await fetch(`${API_BASE}/finance/overview`);
+      if (!r.ok) throw new Error("Failed to load overview");
+      const j = await r.json();
+      setData(j);
+    } catch (e) {
+      console.error(e);
+      setError(true);
+      toast.error("Failed to load finance overview");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // initial + live updates via SSE
+  useEffect(() => {
+    fetchOverview();
+    const src = new EventSource(`${API_BASE}/finance/events`);
+    src.addEventListener("finance", fetchOverview);
+    src.onerror = () => src.close();
+    return () => {
+      src.removeEventListener("finance", fetchOverview);
+      src.close();
+    };
+  }, []);
+
   const totals = data?.totals || {};
+  const earnings = data?.earnings || [];
   const recent = data?.recent || [];
+
+  // ===== Export Report (CSV) =====
+  const onExport = () => {
+    try {
+      const lines = [];
+      lines.push(["Report Generated", new Date().toISOString()].join(","));
+      lines.push("");
+
+      // Totals
+      lines.push("Section,Value");
+      lines.push(["Available Balance", totals.availableBalance ?? 0].join(","));
+      lines.push(["This Month (Net)", totals.thisMonthNet ?? 0].join(","));
+      lines.push(["Total Earnings (Lifetime Income)", totals.lifetimeEarnings ?? 0].join(","));
+      lines.push(["Income (Payments + CR tx)", totals.income ?? 0].join(","));
+      lines.push(["Expense (DR tx)", totals.expense ?? 0].join(","));
+      lines.push(["Net", totals.net ?? 0].join(","));
+      lines.push("");
+
+      // Monthly earnings
+      lines.push("Monthly Earnings");
+      lines.push("Month,Amount,Growth(%)");
+      for (const m of earnings) {
+        lines.push([m.month, m.amount ?? 0, m.growth ?? 0].join(","));
+      }
+      lines.push("");
+
+      // Recent activity
+      lines.push("Recent Activity (last 10)");
+      lines.push("Source,Type,Description,Amount,Date,Status,Id");
+      for (const r of recent) {
+        lines.push([
+          r.source || "",
+          r.type || "",
+          (r.description || "").replace(/,/g, " "), // keep CSV tidy
+          r.amount || "",
+          r.date ? new Date(r.date).toISOString() : "",
+          r.status || "",
+          r.id || "",
+        ].join(","));
+      }
+
+      const csv = lines.join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      downloadBlob(blob, `finance-report-${new Date().toISOString().slice(0,10)}.csv`);
+      toast.success("Report exported");
+    } catch {
+      toast.error("Export failed");
+    }
+  };
+
+  // ===== Withdraw Funds (creates a DR transaction) =====
+  const onWithdraw = async () => {
+    const amount = Number(withdrawAmt);
+    if (!amount || amount <= 0) {
+      return toast.error("Enter a valid amount");
+    }
+    if (totals.availableBalance != null && amount > totals.availableBalance) {
+      return toast.error("Amount exceeds available balance");
+    }
+    try {
+      await axios.post(`${API_BASE}/transactions`, {
+        name: "Owner Withdrawal",
+        description: "Manual withdrawal from available balance",
+        amount,
+        type: "DR",
+        date: new Date(),
+      });
+      toast.success("Withdrawal recorded");
+      setWithdrawOpen(false);
+      setWithdrawAmt("");
+      // overview will auto-refresh via SSE
+    } catch (e) {
+      toast.error(e?.response?.data?.error || "Failed to record withdrawal");
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -37,14 +190,60 @@ const FinanceManagement = () => {
           <p className="text-muted-foreground">Track your earnings, payments, and financial analytics</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-aqua/20 hover:bg-aqua/10">
+          <Button
+            onClick={onExport}
+            variant="outline"
+            className="border-aqua/20 hover:bg-aqua/10"
+            disabled={isLoading || isError || !data}
+            title="Export a CSV snapshot of the overview and recent activity"
+          >
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
-          <Button className="bg-gradient-to-r from-primary to-black hover:opacity-90">
-            <Wallet className="w-4 h-4 mr-2" />
-            Withdraw Funds
-          </Button>
+
+          <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-primary to-black hover:opacity-90">
+                <Wallet className="w-4 h-4 mr-2" />
+                Withdraw Funds
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Withdraw Funds</DialogTitle>
+                <DialogDescription>
+                  This will record a debit transaction and reduce your available balance.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={withdrawAmt}
+                    onChange={(e) => setWithdrawAmt(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Available: {currency(totals.availableBalance ?? 0)}
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={onWithdraw} className="bg-gradient-to-r from-primary to-black">
+                  Confirm Withdrawal
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -63,7 +262,9 @@ const FinanceManagement = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{currency(totals.availableBalance)}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {currency(totals.availableBalance)}
+              </div>
               <p className="text-xs text-muted-foreground">Ready for withdrawal</p>
             </CardContent>
           </Card>
@@ -170,6 +371,4 @@ const FinanceManagement = () => {
       )}
     </div>
   );
-};
-
-export default FinanceManagement;
+}
