@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, Grid, List } from "lucide-react";
+import ChatBot from "@/components/ChatBot"; 
 
 // Real data will be fetched from API.
 
@@ -255,6 +256,8 @@ const Marketplace = () => {
       </section>
 
       <Footer />
+
+      <ChatBot />
     </div>
   );
 };

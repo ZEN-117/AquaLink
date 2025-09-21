@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Fish, Eye, EyeOff } from "lucide-react";
+import { Fish, Eye, EyeOff, Check, X } from "lucide-react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,13 +21,61 @@ const SignUp = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Password validation rules
+  const passwordValidation = {
+    length: formData.password.length >= 8 && formData.password.length <= 20,
+    uppercase: /[A-Z]/.test(formData.password),
+    lowercase: /[a-z]/.test(formData.password),
+    number: /[0-9]/.test(formData.password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password),
+    match: formData.password === formData.confirmPassword && formData.confirmPassword !== ""
+  };
+
+  const isPasswordValid = Object.values(passwordValidation).every(Boolean);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+
+    // Basic field validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+      toast.error("Please fill in all fields", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
       return;
     }
+
+    // Email validation
+    if (!formData.email.includes("@") || !formData.email.includes(".")) {
+      toast.error("Please enter a valid email address", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
+      return;
+    }
+
+    // Password validation
+    if (!isPasswordValid) {
+      toast.error("Password does not meet requirements", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -36,9 +85,26 @@ const SignUp = () => {
         password: formData.password,
       };
       await axios.post("http://localhost:5000/api/users", payload);
+      
+      toast.success("Account created successfully! Please sign in.", {
+        position: "top-center",
+        style: {
+          background: "#22c55e",
+          color: "white",
+          border: "1px solid #16a34a"
+        }
+      });
+      
       navigate("/signin");
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
     } finally {
       setLoading(false);
     }
@@ -132,6 +198,32 @@ const SignUp = () => {
                     )}
                   </Button>
                 </div>
+                
+                {/* Password Requirements */}
+                {formData.password && (
+                  <div className="mt-2 space-y-1 text-xs">
+                    <div className={`flex items-center gap-2 ${passwordValidation.length ? 'text-green-600' : 'text-red-500'}`}>
+                      {passwordValidation.length ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>8-20 characters</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${passwordValidation.uppercase ? 'text-green-600' : 'text-red-500'}`}>
+                      {passwordValidation.uppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>At least one uppercase letter (A-Z)</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${passwordValidation.lowercase ? 'text-green-600' : 'text-red-500'}`}>
+                      {passwordValidation.lowercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>At least one lowercase letter (a-z)</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${passwordValidation.number ? 'text-green-600' : 'text-red-500'}`}>
+                      {passwordValidation.number ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>At least one number (0-9)</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${passwordValidation.special ? 'text-green-600' : 'text-red-500'}`}>
+                      {passwordValidation.special ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>At least one special character (!@#$%^&*)</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -145,9 +237,25 @@ const SignUp = () => {
                   required
                   className="border-aqua/20 focus:border-aqua"
                 />
+                
+                {/* Password Match Indicator */}
+                {formData.confirmPassword && (
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.match ? (
+                      <>
+                        <Check className="h-3 w-3 text-green-600" />
+                        <span className="text-green-600">Passwords match</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-3 w-3 text-red-500" />
+                        <span className="text-red-500">Passwords do not match</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
               
               <Button 
                 type="submit" 
@@ -157,7 +265,7 @@ const SignUp = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
@@ -167,6 +275,15 @@ const SignUp = () => {
                   Sign in
                 </Link>
               </p>
+              
+              <div className="pt-2 border-t border-aqua/10">
+                <Link 
+                  to="/" 
+                  className="text-sm text-muted-foreground hover:text-aqua transition-colors story-link"
+                >
+                  ← Go to Home
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

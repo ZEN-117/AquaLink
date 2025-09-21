@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Fish, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,15 +22,58 @@ const SignIn = () => {
     e.preventDefault();
     clearError();
 
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all fields", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
+      return;
+    }
+
+    if (!formData.email.includes("@")) {
+      toast.error("Please enter a valid email address", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
+      return;
+    }
+
     const result = await login(formData.email, formData.password);
     
     if (result.success) {
+      toast.success("Login successful!", {
+        position: "top-center",
+        style: {
+          background: "#22c55e",
+          color: "white",
+          border: "1px solid #16a34a"
+        }
+      });
       // Navigate based on role
       if (result.role === "User") {
         navigate("/userdashboard");
       } else if (result.role === "admin") {
         navigate("/dashboard");
       }
+    } else {
+      // Error message will be shown via toast from AuthContext
+      toast.error(result.error || "Login failed. Please try again.", {
+        position: "top-center",
+        style: {
+          background: "#ef4444",
+          color: "white",
+          border: "1px solid #dc2626"
+        }
+      });
     }
   };
 
@@ -100,7 +144,6 @@ const SignIn = () => {
                 </div>
               </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
               
               <div className="flex items-center justify-between">
                 <Link 
@@ -119,7 +162,7 @@ const SignIn = () => {
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link 
@@ -129,6 +172,15 @@ const SignIn = () => {
                   Sign up
                 </Link>
               </p>
+              
+              <div className="pt-2 border-t border-aqua/10">
+                <Link 
+                  to="/" 
+                  className="text-sm text-muted-foreground hover:text-aqua transition-colors story-link"
+                >
+                  ← Go to Home
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

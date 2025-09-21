@@ -5,10 +5,16 @@ import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import ManageGigs from "@/components/dashboard/ManageGigs";
 import UserProfile from "@/components/dashboard/UserProfile";
 import FinanceManagement from "@/components/dashboard/FinanceManagement";
+import FishInventory from "@/components/dashboard/FishInventory";
 import FishStock from "@/components/dashboard/FishStock";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+// ⤵️ NEW: import finance sub-pages
+import ManageTransactions from "@/pages/Finance/ManageTransactions";
+import SalaryManagement from "@/pages/Finance/SalaryManagement";
+import MyPayments from "@/pages/Finance/MyPayments";
 
 const Dashboard = () => {
   return (
@@ -56,8 +62,14 @@ const Dashboard = () => {
                 <Route index element={<DashboardOverview />} />
                 <Route path="gigs" element={<ManageGigs />} />
                 <Route path="profile" element={<UserProfile />} />
+                {/* Finance overview */}
                 <Route path="finances" element={<FinanceManagement />} />
+                {/* ⤵️ Finance sub-pages (so /dashboard/finances/* work) */}
+                <Route path="finances/transactions" element={<ManageTransactions />} />
+                <Route path="finances/salaries" element={<SalaryManagement />} />
+                <Route path="finances/mypayments" element={<MyPayments />} />
                 <Route path="stock" element={<FishStock />} />
+                <Route path="inventory" element={<FishInventory />} />
               </Routes>
             </div>
           </main>

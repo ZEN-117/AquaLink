@@ -277,8 +277,15 @@ const FishStock = () => {
                   id="fishCode"
                   value={formData.fishCode}
                   onChange={handleInputChange}
-                  className={!isFishCodeUnique(formData.fishCode) ? "border-red-500" : ""}
+                  placeholder="Enter unique fish code"
+                  className={formData.fishCode && !isFishCodeUnique(formData.fishCode) ? "border-red-500 focus:border-red-500" : ""}
                 />
+                {formData.fishCode && !isFishCodeUnique(formData.fishCode) && (
+                  <p className="text-sm text-red-500">Fish code already exists</p>
+                )}
+                {formData.fishCode && isFishCodeUnique(formData.fishCode) && (
+                  <p className="text-sm text-green-600">Fish code is available</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
