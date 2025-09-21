@@ -24,6 +24,7 @@ const GuppyCard = ({
   inStock,
   features,
   productCode,
+  onAddToCart, // ✅ new prop
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -39,11 +40,11 @@ const GuppyCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Rarity Badge */}
-      {/* <div className="absolute top-3 left-3 z-10">
+      <div className="absolute top-3 left-3 z-10">
         <Badge className={`${rarityColors[rarity]} font-medium text-xs px-2 py-1`}>
           {rarity}
         </Badge>
-      </div> */}
+      </div>
 
       {/* Favorite Button */}
       <button
@@ -67,7 +68,7 @@ const GuppyCard = ({
       )}
 
       <CardContent className="p-0">
-        {/* Image Container */}
+        {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-secondary/30 to-background">
           <img
             src={image}
@@ -77,18 +78,18 @@ const GuppyCard = ({
             }`}
           />
 
-          {/* Overlay on Hover */}
+          {/* Hover Overlay */}
           <div
             className={`absolute inset-0 bg-primary/10 backdrop-blur-[1px] transition-all duration-300 ${
               isHovered ? "opacity-100" : "opacity-0"
             }`}
           >
-            {/* <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
               <Button variant="wave" size="sm" className="shadow-lg">
                 <Eye className="h-4 w-4 mr-2" />
                 Quick View
               </Button>
-            </div> */}
+            </div>
           </div>
 
           {/* Stock Indicator */}
@@ -110,9 +111,9 @@ const GuppyCard = ({
         {/* Content */}
         <div className="p-6">
           {/* Category */}
-          {/* <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
+          <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
             {category}
-          </p> */}
+          </p>
 
           {/* Product Code */}
           {productCode && (
@@ -178,6 +179,7 @@ const GuppyCard = ({
             variant="ocean"
             className="w-full group-hover:shadow-lg transition-all duration-300"
             disabled={inStock === 0}
+            onClick={() => onAddToCart && onAddToCart(id)} // ✅ call handler
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             {inStock > 0 ? "Add to Cart" : "Out of Stock"}

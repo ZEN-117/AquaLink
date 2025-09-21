@@ -1,3 +1,4 @@
+// src/components/GuppyListCard.jsx
 import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
@@ -22,8 +23,9 @@ const GuppyListCard = ({
   category,
   rarity,
   inStock,
-  features,
+  features = [],
   productCode,
+  onAddToCart, // ✅ handler comes from Marketplace
 }) => {
   const [isLiked, setIsLiked] = useState(false);
 
@@ -42,14 +44,15 @@ const GuppyListCard = ({
               alt={name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            
-            {/* Badges */}
+
+            {/* Rarity */}
             <div className="absolute top-2 left-2">
               <Badge className={`${rarityColors[rarity]} font-medium text-xs px-2 py-1`}>
                 {rarity}
               </Badge>
             </div>
 
+            {/* Discount */}
             {discountPercentage > 0 && (
               <div className="absolute top-8 left-2">
                 <Badge className="bg-destructive text-destructive-foreground font-medium text-xs">
@@ -58,10 +61,11 @@ const GuppyListCard = ({
               </div>
             )}
 
-            {/* Favorite Button */}
+            {/* Favorite */}
             <button
               className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-all duration-300"
               onClick={() => setIsLiked(!isLiked)}
+              type="button"
             >
               <Heart
                 className={`h-3 w-3 transition-all duration-300 ${
@@ -70,7 +74,7 @@ const GuppyListCard = ({
               />
             </button>
 
-            {/* Stock Indicator */}
+            {/* Stock */}
             <div className="absolute bottom-2 right-2">
               <div
                 className={`px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -86,7 +90,7 @@ const GuppyListCard = ({
             </div>
           </div>
 
-          {/* Details Section */}
+          {/* Details */}
           <div className="flex-1 p-6 flex flex-col justify-between">
             <div>
               {/* Category */}
@@ -152,13 +156,15 @@ const GuppyListCard = ({
               </div>
             </div>
 
-            {/* Action Button */}
+            {/* Action */}
             <div className="flex justify-start">
               <Button
                 variant="ocean"
                 size="sm"
                 className="group-hover:shadow-md transition-all duration-300"
                 disabled={inStock === 0}
+                onClick={() => onAddToCart && onAddToCart(id)} // ✅ call the handler
+                type="button"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 {inStock > 0 ? "Add to Cart" : "Out of Stock"}

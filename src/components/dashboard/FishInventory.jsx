@@ -207,7 +207,7 @@ const InventoryPage = () => {
     // Check if there are any errors in any row
     const hasErrors = assignRows.some(r => r.error);
     if (hasErrors) {
-      toast.error("Please fix errors before assigning");
+      toast.error("Exeeded Stock Level");
       return;
     }
 

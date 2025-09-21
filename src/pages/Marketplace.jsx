@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Filter, Grid, List } from "lucide-react";
-import ChatBot from "@/components/ChatBot"; 
+import ChatBot from "@/components/ChatBot";
+import toast from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
 
-// Real data will be fetched from API.
+const API_BASE = "http://localhost:5000";
 
 const categories = ["All", "Premium Males", "Premium Females", "Breeding Pairs", "Exclusive Collection", "Specialty"];
 const sortOptions = [
@@ -19,30 +21,34 @@ const sortOptions = [
   { value: "price-low", label: "Price: Low to High" },
   { value: "price-high", label: "Price: High to Low" },
   { value: "rating", label: "Highest Rated" },
-  { value: "popular", label: "Most Popular" }
+  { value: "popular", label: "Most Popular" },
 ];
 
 const Marketplace = () => {
+  const { user } = useAuth();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
   const [products, setProducts] = useState([]);
   const [fishStocks, setFishStocks] = useState([]);
 
+  // ✅ single source of truth for cart user id
+  const uid = useMemo(() => (user?._id || "guest"), [user]);
+
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/products");
+      const res = await axios.get(`${API_BASE}/api/products`);
       setProducts(res.data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error("Failed to load products");
     }
   };
 
   const fetchFishStocks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/fishstocks");
+      const res = await axios.get(`${API_BASE}/api/fishstocks`);
       setFishStocks(res.data || []);
     } catch (err) {
       console.error(err);
@@ -55,21 +61,17 @@ const Marketplace = () => {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      fetchFishStocks();
-    }, 5000);
+    const id = setInterval(() => fetchFishStocks(), 5000);
     return () => clearInterval(id);
   }, []);
 
   const getCurrentStock = (product) => {
     const match = fishStocks.find((f) => f.fishCode === product.fishCode);
-    if (match && typeof match.stock === "number") return match.stock;
-    return product.stock || 0;
+    return match?.stock ?? product.stock ?? 0;
   };
 
-  // Map products to the display schema expected by cards
   const liveItems = (products || []).map((p) => ({
-    id: p._id,
+    id: p._id || p.id, // tolerate either key from API
     name: p.title,
     image: p.image,
     price: p.price,
@@ -83,19 +85,43 @@ const Marketplace = () => {
     productCode: p.productCode,
   }));
 
-  const filteredGuppies = liveItems.filter(guppy => {
-    const matchesSearch =
-      guppy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guppy.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || guppy.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+  const sortItems = (items) => {
+    switch (sortBy) {
+      case "price-low":  return [...items].sort((a, b) => a.price - b.price);
+      case "price-high": return [...items].sort((a, b) => b.price - a.price);
+      case "popular":    return [...items].sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+      case "rating":     return [...items].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      default:           return items;
+    }
+  };
+
+  const filteredGuppies = sortItems(
+    liveItems.filter((g) => {
+      const s = searchTerm.toLowerCase();
+      const matchesSearch = g.name.toLowerCase().includes(s) || g.category.toLowerCase().includes(s);
+      const matchesCategory = selectedCategory === "All" || g.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+  );
+
+  const addToCart = async (productId) => {
+    try {
+      await axios.post(`${API_BASE}/api/cart/add`, {
+        userId: uid,                         // ✅ consistent with Cart page
+        productId: String(productId),        // ✅ ensure string ObjectId
+        quantity: 1,
+      });
+      toast.success("Added to cart!");
+    } catch (e) {
+      console.error("addToCart error:", e?.response?.data || e.message);
+      toast.error("Failed to add to cart");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero */}
       <section className="pt-24 pb-12 bg-gradient-to-br from-primary/10 via-background to-accent/5">
         <div className="container mx-auto px-4">
@@ -120,9 +146,7 @@ const Marketplace = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 {/* Search */}
                 <div className="lg:col-span-2">
-                  <label className="block text-lg font-medium text-foreground mb-2">
-                    Search Guppies
-                  </label>
+                  <label className="block text-lg font-medium mb-2">Search Guppies</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -136,40 +160,22 @@ const Marketplace = () => {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-lg font-medium text-foreground mb-2">
-                    Category
-                  </label>
+                  <label className="block text-lg font-medium mb-2">Category</label>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
-                
-
                 {/* Sort */}
                 <div>
-                  <label className="block text-lg font-medium text-foreground mb-2">
-                    Sort By
-                  </label>
+                  <label className="block text-lg font-medium mb-2">Sort By</label>
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {sortOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      {sortOptions.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -181,20 +187,8 @@ const Marketplace = () => {
                   Showing {filteredGuppies.length} of {liveItems.length} guppies
                 </p>
                 <div className="flex items-center space-x-2">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+                  <Button variant={viewMode === "grid" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("grid")}><Grid className="h-4 w-4" /></Button>
+                  <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")}><List className="h-4 w-4" /></Button>
                 </div>
               </div>
             </CardContent>
@@ -205,24 +199,13 @@ const Marketplace = () => {
       {/* Guppy grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div
-            className={`grid gap-6 ${
-              viewMode === "grid"
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "grid-cols-1 w-full"
-            }`}
-          >
-            {filteredGuppies.map((guppy, index) => (
-              <div
-                key={guppy.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {viewMode === "grid" ? (
-                  <GuppyCard {...guppy} />
-                ) : (
-                  <GuppyListCard {...guppy} />
-                )}
+          <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1 w-full"}`}>
+            {filteredGuppies.map((g, i) => (
+              <div key={g.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
+                {viewMode === "grid"
+                  ? <GuppyCard {...g} onAddToCart={() => addToCart(g.id)} />
+                  : <GuppyListCard {...g} onAddToCart={() => addToCart(g.id)} />
+                }
               </div>
             ))}
           </div>
@@ -232,21 +215,9 @@ const Marketplace = () => {
             <div className="text-center py-12">
               <div className="max-w-md mx-auto">
                 <Filter className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  No guppies found
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  Try adjusting your filters or search terms to find what you're looking for.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedCategory("All");
-                    
-                    setSortBy("newest");
-                  }}
-                >
+                <h3 className="text-xl font-semibold mb-2">No guppies found</h3>
+                <p className="text-muted-foreground mb-6">Try adjusting your filters or search terms.</p>
+                <Button variant="outline" onClick={() => { setSearchTerm(""); setSelectedCategory("All"); setSortBy("newest"); }}>
                   Clear Filters
                 </Button>
               </div>
@@ -256,7 +227,6 @@ const Marketplace = () => {
       </section>
 
       <Footer />
-
       <ChatBot />
     </div>
   );
