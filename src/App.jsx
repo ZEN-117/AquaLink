@@ -12,6 +12,8 @@ import UserDashboard from "./pages/userDashboard";
 import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 import {Toaster} from "react-hot-toast";
+import AdminDashboard from "./pages/AdminDashboard";
+import StaffDashboard from "./pages/StaffDashboard";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ const App = () => (
         <Route path="/dashboard/*" element={<Dashboard />} />
         <Route path="/userdashboard/*" element={<UserDashboard />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="/admindashboard/*" element={<AdminDashboard />} />
+        <Route path="/staffdashboard/*" element={<StaffDashboard />} />
       </Routes>
     </TooltipProvider>
   </QueryClientProvider>
