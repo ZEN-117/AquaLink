@@ -21,6 +21,19 @@ const SignUp = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Email validation rules
+  const emailValidation = {
+    hasAt: formData.email.includes("@"),
+    hasDomain: formData.email.includes(".") && formData.email.split("@")[1]?.includes("."),
+    validChars: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email),
+    noStartPeriod: !formData.email.startsWith("."),
+    noEndPeriod: !formData.email.split("@")[0]?.endsWith("."),
+    noConsecutivePeriods: !formData.email.split("@")[0]?.includes(".."),
+    validLength: formData.email.length > 0 && formData.email.length <= 254
+  };
+
+  const isEmailValid = Object.values(emailValidation).every(Boolean);
+
   // Password validation rules
   const passwordValidation = {
     length: formData.password.length >= 8 && formData.password.length <= 20,
@@ -51,7 +64,7 @@ const SignUp = () => {
     }
 
     // Email validation
-    if (!formData.email.includes("@") || !formData.email.includes(".")) {
+    if (!isEmailValid) {
       toast.error("Please enter a valid email address", {
         position: "top-center",
         style: {
@@ -168,8 +181,38 @@ const SignUp = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="border-aqua/20 focus:border-aqua"
+                  className={`border-aqua/20 focus:border-aqua ${
+                    formData.email && !isEmailValid ? "border-red-500 focus:border-red-500" : ""
+                  }`}
                 />
+                {formData.email && (
+                  <div className="mt-2 space-y-1 text-xs">
+                    <div className={`flex items-center gap-2 ${emailValidation.hasAt ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.hasAt ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Contains @ symbol</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${emailValidation.hasDomain ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.hasDomain ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Valid domain format</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${emailValidation.validChars ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.validChars ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Only letters, numbers, ., -, _ allowed</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${emailValidation.noStartPeriod ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.noStartPeriod ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Cannot start with period</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${emailValidation.noEndPeriod ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.noEndPeriod ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>Cannot end with period</span>
+                    </div>
+                    <div className={`flex items-center gap-2 ${emailValidation.noConsecutivePeriods ? 'text-green-600' : 'text-red-500'}`}>
+                      {emailValidation.noConsecutivePeriods ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      <span>No consecutive periods</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">

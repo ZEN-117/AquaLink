@@ -273,7 +273,7 @@ const getCurrentStockForGig = (gig) => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="price">Price ($)</Label>
+                <Label htmlFor="price">Price (Rs.)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -352,7 +352,7 @@ const getCurrentStockForGig = (gig) => {
                       <h3 className="font-semibold text-foreground">{gig.title}</h3>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-lg font-bold text-aqua">
-                          ${gig.price.toFixed(2)}
+                          Rs. {gig.price.toFixed(2)}
                         </span>
                         <Badge
                           className={getStatusColor(getCurrentStockForGig(gig) > 0 ? "In Stock" : "Out of Stock")}

@@ -199,8 +199,8 @@ const Cart = () => {
                           </Button>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-lg">${(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} each</p>
+                          <p className="font-semibold text-lg">Rs. {(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">Rs. {item.price.toFixed(2)} each</p>
                         </div>
                       </div>
                     </div>
@@ -226,34 +226,34 @@ const Cart = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>Rs. {subtotal.toFixed(2)}</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({(discount * 100)}%)</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
+                      <span>-Rs. {discountAmount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                    <span>{shipping === 0 ? 'Free' : `Rs. ${shipping.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>Rs. {tax.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>Rs. {total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 {subtotal < 50 && (
                   <div className="bg-muted p-3 rounded-lg text-sm">
-                    <p className="font-medium">Free shipping on orders over $50!</p>
+                    <p className="font-medium">Free shipping on orders over Rs. 50!</p>
                     <p className="text-muted-foreground">
-                      Add ${(50 - subtotal).toFixed(2)} more to qualify.
+                      Add Rs. {(50 - subtotal).toFixed(2)} more to qualify.
                     </p>
                   </div>
                 )}

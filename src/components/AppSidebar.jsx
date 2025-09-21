@@ -18,7 +18,8 @@ import {
   ShoppingBag,
   HouseIcon,
   Fish,
-  ChevronDown // 👉 Added for finance dropdown arrow
+  ChevronDown, // 👉 Added for finance dropdown arrow
+  Warehouse
 } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react"; // 👉 Needed for finance expand/collapse logic
@@ -30,9 +31,9 @@ const menuItems = [
     icon: ShoppingBag,
   },
   { 
-    title: "Profile", 
-    url: "/dashboard/profile", 
-    icon: User,
+    title: "Fish Stock", 
+    url: "/dashboard/stock", 
+    icon: BarChart3,
   },
   { 
     title: "Finances", 
@@ -40,15 +41,15 @@ const menuItems = [
     icon: DollarSign,
     isFinanceParent: true, 
   },
-  { 
-    title: "Fish Stock", 
-    url: "/dashboard/stock", 
-    icon: BarChart3,
-  },
    { 
     title: "Inventory", 
     url: "/dashboard/inventory", 
-    icon: BarChart3,
+    icon: Warehouse,
+  },
+  { 
+    title: "Profile", 
+    url: "/dashboard/profile", 
+    icon: User,
   },
 ];
 

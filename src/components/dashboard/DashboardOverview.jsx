@@ -14,7 +14,7 @@ const DashboardOverview = () => {
     },
     {
       title: "Total Earnings",
-      value: "$2,840",
+      value: "Rs. 2,840",
       description: "This month",
       icon: DollarSign,
       color: "text-green-500",
@@ -41,7 +41,7 @@ const DashboardOverview = () => {
   const recentActivity = [
     { action: "New order", item: "Rainbow Guppy Male", time: "2 hours ago" },
     { action: "Gig updated", item: "Blue Moscow Guppy", time: "4 hours ago" },
-    { action: "Payment received", item: "$120 from order #1234", time: "6 hours ago" },
+    { action: "Payment received", item: "Rs. 120 from order #1234", time: "6 hours ago" },
     { action: "New review", item: "5-star rating received", time: "1 day ago" }
   ];
 

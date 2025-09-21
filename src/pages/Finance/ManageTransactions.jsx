@@ -44,6 +44,25 @@ export default function ManageTransactions() {
       if (!form.name || !form.amount || !form.type) {
         return toast.error("Fill all required fields");
       }
+
+      // Validate amount
+      if (form.amount <= 0) {
+        return toast.error("Amount must be greater than 0");
+      }
+
+      // Validate description length
+      if (form.description && form.description.length > 100) {
+        return toast.error("Description cannot exceed 100 characters");
+      }
+
+      // Validate date (not in future)
+      const selectedDate = new Date(form.date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      if (selectedDate > today) {
+        return toast.error("Cannot select future dates");
+      }
+
       const payload = {
         ...form,
         date: new Date(form.date),
@@ -149,12 +168,15 @@ export default function ManageTransactions() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">Amount (Rs.)</Label>
                 <Input
                   id="amount"
                   type="number"
+                  min="0"
+                  step="0.01"
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  placeholder="0.00"
                 />
               </div>
             </div>
@@ -177,6 +199,7 @@ export default function ManageTransactions() {
                 <Input
                   id="date"
                   type="date"
+                  max={new Date().toISOString().slice(0, 10)}
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                 />
@@ -189,7 +212,14 @@ export default function ManageTransactions() {
                 id="description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
+                maxLength={100}
+                placeholder="Enter description (max 100 characters)"
               />
+              {form.description && (
+                <p className="text-xs text-muted-foreground">
+                  {form.description.length}/100 characters
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2">
@@ -234,7 +264,7 @@ export default function ManageTransactions() {
                     row.type === "CR" ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {row.type === "CR" ? "+" : "-"}${Number(row.amount || 0).toFixed(2)}
+                  {row.type === "CR" ? "+" : "-"}Rs. {Number(row.amount || 0).toFixed(2)}
                 </div>
                 <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
                   <Edit className="w-4 h-4" />
