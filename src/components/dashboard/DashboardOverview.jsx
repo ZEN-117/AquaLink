@@ -1,16 +1,54 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Fish, DollarSign, TrendingUp, Package, Plus, Eye } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 
 const DashboardOverview = () => {
+  const { user } = useAuth();
+  const [totalGigs, setTotalGigs] = useState(0);
+  const [totalFishStock, setTotalFishStock] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch total gigs
+        const gigsResponse = await axios.get("http://localhost:5000/api/products");
+        setTotalGigs(gigsResponse.data?.length || 0);
+
+        // Fetch total fish stock
+        const fishStockResponse = await axios.get("http://localhost:5000/api/fishstocks");
+        const totalStock = fishStockResponse.data?.reduce((sum, fish) => sum + (fish.stock || 0), 0) || 0;
+        setTotalFishStock(totalStock);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const stats = [
     {
-      title: "Active Gigs",
-      value: "12",
-      description: "Guppy listings live",
+      title: "Total Gigs",
+      value: loading ? "..." : totalGigs.toString(),
+      description: "Gigs added",
       icon: Package,
       color: "text-aqua",
       bgColor: "bg-aqua/10"
+    },
+    {
+      title: "Total Fish Stock",
+      value: loading ? "..." : totalFishStock.toString(),
+      description: "Fish in stock",
+      icon: Fish,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10"
     },
     {
       title: "Total Earnings",
@@ -19,14 +57,6 @@ const DashboardOverview = () => {
       icon: DollarSign,
       color: "text-green-500",
       bgColor: "bg-green-500/10"
-    },
-    {
-      title: "Fish Sold",
-      value: "156",
-      description: "Total fish sold",
-      icon: Fish,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10"
     },
     {
       title: "Growth Rate",
@@ -48,7 +78,9 @@ const DashboardOverview = () => {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-aqua rounded-xl p-6 text-primary animate-scale-in">
-        <h1 className="text-2xl font-bold mb-2">Welcome back, John!</h1>
+        <h1 className="text-2xl font-bold mb-2">
+          Welcome back, {user?.firstName || 'Owner'}!
+        </h1>
         <p className="text-aqua-light">
           Your aquatic business is swimming along nicely. Here's what's happening today.
         </p>
@@ -87,10 +119,10 @@ const DashboardOverview = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button className="w-full bg-gradient-to-r justify-start from-primary to-black text-white hover:opacity-90 transition-all duration-300 " >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Gig
-            </Button>
+             <Button className="w-full bg-gradient-to-r justify-start from-primary to-black text-white hover:opacity-90 transition-all duration-300 " >
+               <Plus className="w-4 h-4 mr-2" />
+               Add New Gig
+             </Button>
             <Button variant="outline" className="w-full justify-start border-aqua/20 hover:bg-aqua/10">
               <Eye className="w-4 h-4 mr-2" />
               View Marketplace
