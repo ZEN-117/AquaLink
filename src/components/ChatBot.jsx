@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, X } from "lucide-react";
 
 const ChatBot = () => {
@@ -7,74 +7,106 @@ const ChatBot = () => {
     { from: "bot", text: "Hello! Welcome to AquaLink 🐠 How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   // Predefined FAQ responses
   const faqAnswers = {
-  "available guppies": "We have Moscow, Delta, and Rainbow guppies.",
-  "moscow": "Moscow guppies are available in stock.",
-  "delta": "Delta guppies are available in stock.",
-  "rainbow": "Rainbow guppies are available in stock.",
-  "payment": "You can pay via PayPal, Credit Card, or Bank Transfer.",
-  "shipping": "We deliver across the USA within 3-5 business days.",
-  "order": "Track your orders in your dashboard under 'Manage Orders'.",
-  "care": "Keep water clean, maintain temperature 24-26°C, and feed twice daily."
-};
+    "available guppies": "We have Moscow, Delta, and Rainbow guppies.",
+    "moscow": "Moscow guppies are available in stock.",
+    "delta": "Delta guppies are available in stock.",
+    "rainbow": "Rainbow guppies are available in stock.",
+    "payment": "You can pay via PayPal, Credit Card, or Bank Transfer.",
+    "shipping": "We deliver across the USA within 3-5 business days.",
+    "order": "Track your orders in your dashboard under 'Manage Orders'.",
+    "care": "Keep water clean, maintain temperature 24-26°C, and feed twice daily."
+  };
 
+  const fallbackReplies = [
+    "Hmm, I didn’t quite get that. Could you rephrase?",
+    "I’m not sure I understand. Can you ask differently?",
+    "Sorry, I’m still learning. Could you try asking another way?",
+    "Oops! That went over my head 😅. Can you ask something else?"
+  ];
 
-const fallbackReplies = [
-  "Hmm, I didn’t quite get that. Could you rephrase?",
-  "I’m not sure I understand. Can you ask differently?",
-  "Sorry, I’m still learning. Could you try asking another way?",
-  "Oops! That went over my head 😅. Can you ask something else?"
-];
+  // Add emojis based on keywords
+  const addEmoji = (text) => {
+    if (text.toLowerCase().includes("guppy")) return text + " 🐠";
+    if (text.toLowerCase().includes("order")) return text + " 📦";
+    if (text.toLowerCase().includes("shipping")) return text + " 🚚";
+    if (text.toLowerCase().includes("payment")) return text + " 💳";
+    return text;
+  };
 
-const sendMessage = async () => {
-  if (!input.trim()) return;
+  // Categorize messages for better labeling
+  const categorizeMessage = (text) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("guppy")) return "GUPPY";
+    if (lower.includes("order")) return "ORDER";
+    if (lower.includes("payment")) return "PAYMENT";
+    if (lower.includes("shipping")) return "SHIPPING";
+    return "GENERAL";
+  };
 
-  const userMessage = input.trim();
-  setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
-  setInput("");
+  const sendMessage = async () => {
+    if (!input.trim()) return;
 
-  // 1. Check local FAQ (supports partial matches)
-  const lowerMessage = userMessage.toLowerCase();
-  let matchedAnswer = null;
+    const userMessage = input.trim();
+    setMessages(prev => [...prev, { from: "user", text: userMessage }]);
+    setInput("");
+    setIsTyping(true);
 
-  for (const keyword in faqAnswers) {
-    if (lowerMessage.includes(keyword)) {
-      matchedAnswer = faqAnswers[keyword];
-      break;
+    // 1. Check local FAQ first
+    const lowerMessage = userMessage.toLowerCase();
+    let matchedAnswer = null;
+    for (const keyword in faqAnswers) {
+      if (lowerMessage.includes(keyword)) {
+        matchedAnswer = faqAnswers[keyword];
+        break;
+      }
     }
-  }
 
-  if (matchedAnswer) {
-    setMessages((prev) => [...prev, { from: "bot", text: matchedAnswer }]);
-    return; // stop here, don’t call backend
-  }
+    if (matchedAnswer) {
+      setMessages(prev => [
+        ...prev,
+        { from: "bot", text: `[FAQ] ${addEmoji(matchedAnswer)}` }
+      ]);
+      setIsTyping(false);
+      return;
+    }
 
-  // 2. Otherwise, call backend
-  try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userMessage }),
-    });
+    // 2. Call backend GPT if no local FAQ matched
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage, history: messages }),
+      });
 
-    const data = await res.json();
-    const botReply = data.reply || fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      const data = await res.json();
+      const botReply = data.reply || fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      const category = categorizeMessage(userMessage);
 
-    setMessages((prev) => [...prev, { from: "bot", text: botReply }]);
-  } catch (err) {
-    const botReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-    setMessages((prev) => [...prev, { from: "bot", text: botReply }]);
-  }
-};
-
-
-
+      setMessages(prev => [
+        ...prev,
+        { from: "bot", text: `[${category}] ${addEmoji(botReply)}` }
+      ]);
+    } catch (err) {
+      const botReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      setMessages(prev => [...prev, { from: "bot", text: botReply }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") sendMessage();
   };
+
+  // Auto-scroll chat
+  useEffect(() => {
+    const chatContainer = document.querySelector(".chatbot-messages");
+    if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+  }, [messages, isTyping]);
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
@@ -102,6 +134,11 @@ const sendMessage = async () => {
                 {msg.text}
               </div>
             ))}
+            {isTyping && (
+              <div className="px-3 py-2 rounded-lg bg-aqua/10 text-black self-start animate-pulse">
+                Bot is typing...
+              </div>
+            )}
           </div>
 
           {/* Input */}
@@ -121,6 +158,19 @@ const sendMessage = async () => {
               Send
             </button>
           </div>
+
+          {/* Quick reply buttons */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {["Available guppies", "Payment methods", "Shipping", "Track order"].map((btn, i) => (
+              <button
+                key={i}
+                className="bg-aqua/20 px-2 py-1 rounded hover:bg-aqua/40 text-black text-sm"
+                onClick={() => setInput(btn)}
+              >
+                {btn}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -132,7 +182,7 @@ const sendMessage = async () => {
         <MessageCircle className="w-6 h-6 text-white"/>
       </button>
 
-      {/* Extra CSS for smooth scroll, fade-in, and custom scrollbar */}
+      {/* Extra CSS */}
       <style jsx>{`
         .chatbot-messages {
           scroll-behavior: smooth;
