@@ -5,6 +5,7 @@ import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import ManageGigs from "@/components/dashboard/ManageGigs";
 import UserProfile from "@/components/dashboard/UserProfile";
 import FinanceManagement from "@/components/dashboard/FinanceManagement";
+import FishInventory from "@/components/dashboard/FishInventory";
 import FishStock from "@/components/dashboard/FishStock";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,8 +68,8 @@ const Dashboard = () => {
                 <Route path="finances/transactions" element={<ManageTransactions />} />
                 <Route path="finances/salaries" element={<SalaryManagement />} />
                 <Route path="finances/mypayments" element={<MyPayments />} />
-                
                 <Route path="stock" element={<FishStock />} />
+                <Route path="inventory" element={<FishInventory />} />
               </Routes>
             </div>
           </main>
