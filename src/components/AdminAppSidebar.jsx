@@ -1,32 +1,18 @@
 import { useLocation, useNavigate, NavLink } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,} from "@/components/ui/sidebar";
 import { useAuth } from "../contexts/AuthContext";
-import { 
-  User, 
-  Users, 
-  Shield, 
-  BarChart3, 
-  LogOut,
-  Settings,
-  HouseIcon,
-  Fish,
-  FileText
-} from "lucide-react";
+import {  User,  Users,  Shield,  BarChart3,  LogOut, Settings, HouseIcon, Fish, FileText} from "lucide-react";
 
 const menuItems = [
   { 
     title: "User Management", 
     url: "/admindashboard/users", 
     icon: Users,
+  },
+  { 
+    title: "Manage Stock Details", 
+    url: "/admindashboard/stock", 
+    icon: BarChart3,
   },
   { 
     title: "Security Settings", 

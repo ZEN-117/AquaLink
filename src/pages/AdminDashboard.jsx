@@ -10,6 +10,7 @@ import UserProfile from "@/components/dashboard/UserProfile";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import FishStock from "@/components/dashboard/FishStock";
 
 const AdminDashboard = () => {
   return (
@@ -60,6 +61,7 @@ const AdminDashboard = () => {
                 <Route path="analytics" element={<SystemAnalytics />} />
                 <Route path="content" element={<ContentManagement />} />
                 <Route path="profile" element={<UserProfile />} />
+                <Route path="stock" element={<FishStock />} />
               </Routes>
             </div>
           </main>

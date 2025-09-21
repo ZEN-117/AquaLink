@@ -1,187 +1,321 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import {Card, CardContent, CardHeader, CardTitle,} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Search, Plus, MoreHorizontal, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Edit, Trash2 } from "lucide-react";
 
 const UserManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Mock user data
-  const users = [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "User", status: "Active", lastLogin: "2 hours ago", avatar: null },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Staff", status: "Active", lastLogin: "1 day ago", avatar: null },
-    { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Owner", status: "Inactive", lastLogin: "1 week ago", avatar: null },
-    { id: 4, name: "Alice Brown", email: "alice@example.com", role: "User", status: "Active", lastLogin: "30 minutes ago", avatar: null },
-    { id: 5, name: "Mike Wilson", email: "mike@example.com", role: "Admin", status: "Active", lastLogin: "5 minutes ago", avatar: null },
-  ];
+  // Password handling states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/users");
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
-      case 'Admin': return 'destructive';
-      case 'Owner': return 'default';
-      case 'Staff': return 'secondary';
-      default: return 'outline';
+      case "Admin":
+        return "destructive";
+      case "Owner":
+        return "default";
+      case "Staff":
+        return "secondary";
+      default:
+        return "outline";
     }
   };
 
-  const getStatusBadgeColor = (status) => {
-    return status === 'Active' ? 'default' : 'secondary';
+  const getStatusBadgeColor = (isBlocked) => {
+    return !isBlocked ? "default" : "secondary"; // Active if not blocked
+  };
+
+  // Handle delete
+  const handleDelete = async (email) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${email}`);
+      setUsers(users.filter((u) => u.email !== email));
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
+
+  // Handle update save
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    // If password input not shown, prevent overwriting with blank
+    const payload = { ...selectedUser };
+    if (!showPasswordInput) {
+      delete payload.password;
+    }
+
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/users/${selectedUser.email}`,
+        payload
+      );
+      const updatedUser = res.data.user;
+      setUsers(
+        users.map((u) => (u.email === updatedUser.email ? updatedUser : u))
+      );
+      setShowModal(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">User Management</h1>
-          <p className="text-muted-foreground">Manage user accounts, roles, and permissions</p>
-        </div>
-        <Button className="bg-gradient-aqua hover:bg-gradient-aqua/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New User
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-aqua/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="border-aqua/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,180</div>
-            <p className="text-xs text-muted-foreground">+8% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="border-aqua/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">New Registrations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">142</div>
-            <p className="text-xs text-muted-foreground">+24% from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="border-aqua/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Staff Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">28</div>
-            <p className="text-xs text-muted-foreground">+2 new hires</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users Table */}
       <Card className="border-aqua/10">
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>All Users</CardTitle>
-              <CardDescription>A list of all users in the system</CardDescription>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="Search users..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-aqua/20 focus:border-aqua"
-              />
-            </div>
-          </div>
+          <CardTitle>User Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeColor(user.role)}>{user.role}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeColor(user.status)}>{user.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{user.lastLogin}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          {user.status === 'Active' ? (
-                            <>
-                              <UserX className="mr-2 h-4 w-4" />
-                              Suspend User
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck className="mr-2 h-4 w-4" />
-                              Activate User
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {loading ? (
+            <p>Loading users...</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Email Verified</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user._id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.image} />
+                          <AvatarFallback>
+                            {user.firstName[0]}
+                            {user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getRoleBadgeColor(user.role)}>
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeColor(user.isBlocked)}>
+                        {user.isBlocked ? "Inactive" : "Active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.isEmailVerified ? (
+                        <Badge variant="default">Verified</Badge>
+                      ) : (
+                        <Badge variant="secondary">Not Verified</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        className="hover:bg-gray-300 focus:bg-gray-300"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser({ ...user });
+                          setShowPassword(false);
+                          setShowPasswordInput(false);
+                          setShowModal(true);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                        size="sm"
+                        onClick={() => handleDelete(user.email)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
+
+      {/* Edit User Popup */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-3xl w-3xl bg-gray-200">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user details and save changes
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <form onSubmit={handleUpdate} className="space-y-5 mt-4">
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <Input value={selectedUser.email} disabled />
+              </div>
+
+              {/* First Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">First Name</label>
+                <Input
+                  value={selectedUser.firstName}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, firstName: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Last Name</label>
+                <Input
+                  value={selectedUser.lastName}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, lastName: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Role</label>
+                <Select
+                  value={selectedUser.role}
+                  onValueChange={(value) =>
+                    setSelectedUser({ ...selectedUser, role: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="User" className="hover:bg-gray-300 focus:bg-gray-300">User</SelectItem>
+                    <SelectItem value="admin" className="hover:bg-gray-300 focus:bg-gray-300">Admin</SelectItem>
+                    <SelectItem value="owner" className="hover:bg-gray-300 focus:bg-gray-300">Owner</SelectItem>
+                    <SelectItem value="staff" className="hover:bg-gray-300 focus:bg-gray-300">Staff</SelectItem>
+                  </SelectContent>
+
+                </Select>
+              </div>
+
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Password</label>
+                {!showPasswordInput ? (
+                  <div className="flex items-center justify-between p-2 border rounded bg-white">
+                    <span className="text-gray-500">••••••••</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPasswordInput(true)}
+                    >
+                      Change Password
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={selectedUser.password || ""}
+                      onChange={(e) =>
+                        setSelectedUser({ ...selectedUser, password: e.target.value })
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Status checkboxes */}
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedUser.isBlocked}
+                    onCheckedChange={(value) =>
+                      setSelectedUser({ ...selectedUser, isBlocked: value })
+                    }
+                  />
+                  Blocked
+                </label>
+                <label className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedUser.isEmailVerified}
+                    onCheckedChange={(value) =>
+                      setSelectedUser({ ...selectedUser, isEmailVerified: value })
+                    }
+                  />
+                  Verified
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-blue-600 text-white">
+                  Save
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
