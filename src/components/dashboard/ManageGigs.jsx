@@ -77,6 +77,12 @@ const ManageGigs = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Check if product code is unique
+  const isProductCodeUnique = (code) => {
+    if (editingProduct && editingProduct.productCode === code) return true; // allow same code when editing
+    return !products.some((p) => p.productCode.toLowerCase() === code.toLowerCase());
+  };
+
   // Handle input change
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -91,6 +97,11 @@ const handleSubmit = async () => {
   try {
     if (!formData.productCode || !formData.title || !formData.price || !formData.image) {
       return toast.error("Please fill in all required fields");
+    }
+
+    // Validate product code uniqueness
+    if (!isProductCodeUnique(formData.productCode)) {
+      return toast.error("Product code already exists. Please use a different code.");
     }
 
     if (editingProduct) {
@@ -252,15 +263,25 @@ const getCurrentStockForGig = (gig) => {
                   onChange={handleInputChange}
                   placeholder="Enter unique product code"
                   disabled={editingProduct}
+                  className={formData.productCode && !isProductCodeUnique(formData.productCode) ? "border-red-500 focus:border-red-500" : ""}
                 />
+                {formData.productCode && !isProductCodeUnique(formData.productCode) && (
+                  <p className="text-sm text-red-500">Product code already exists</p>
+                )}
+                {formData.productCode && isProductCodeUnique(formData.productCode) && (
+                  <p className="text-sm text-green-600">Product code is available</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Price ($)</Label>
                 <Input
                   id="price"
                   type="number"
+                  min="0"
+                  step="0.01"
                   value={formData.price}
                   onChange={handleInputChange}
+                  placeholder="0.00"
                 />
               </div>
             </div>
