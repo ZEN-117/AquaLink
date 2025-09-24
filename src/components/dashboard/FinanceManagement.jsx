@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { exportFinancePDF } from "@/lib/exportFinancePDF";
+
 import {
   Card,
   CardContent,
@@ -92,54 +94,16 @@ export default function FinanceManagement() {
   const earnings = data?.earnings || [];
   const recent = data?.recent || [];
 
-  // ===== Export Report (CSV) =====
-  const onExport = () => {
-    try {
-      const lines = [];
-      lines.push(["Report Generated", new Date().toISOString()].join(","));
-      lines.push("");
+ // ===== Export Report (PDF) =====
+const onExportPDF = async () => {
+  try {
+    await exportFinancePDF();
+  } catch (e) {
+    console.error(e);
+    toast.error("Export failed");
+  }
+};
 
-      // Totals
-      lines.push("Section,Value");
-      lines.push(["Available Balance", totals.availableBalance ?? 0].join(","));
-      lines.push(["This Month (Net)", totals.thisMonthNet ?? 0].join(","));
-      lines.push(["Total Earnings (Lifetime Income)", totals.lifetimeEarnings ?? 0].join(","));
-      lines.push(["Income (Payments + CR tx)", totals.income ?? 0].join(","));
-      lines.push(["Expense (DR tx)", totals.expense ?? 0].join(","));
-      lines.push(["Net", totals.net ?? 0].join(","));
-      lines.push("");
-
-      // Monthly earnings
-      lines.push("Monthly Earnings");
-      lines.push("Month,Amount,Growth(%)");
-      for (const m of earnings) {
-        lines.push([m.month, m.amount ?? 0, m.growth ?? 0].join(","));
-      }
-      lines.push("");
-
-      // Recent activity
-      lines.push("Recent Activity (last 10)");
-      lines.push("Source,Type,Description,Amount,Date,Status,Id");
-      for (const r of recent) {
-        lines.push([
-          r.source || "",
-          r.type || "",
-          (r.description || "").replace(/,/g, " "), // keep CSV tidy
-          r.amount || "",
-          r.date ? new Date(r.date).toISOString() : "",
-          r.status || "",
-          r.id || "",
-        ].join(","));
-      }
-
-      const csv = lines.join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      downloadBlob(blob, `finance-report-${new Date().toISOString().slice(0,10)}.csv`);
-      toast.success("Report exported");
-    } catch {
-      toast.error("Export failed");
-    }
-  };
 
   // ===== Withdraw Funds (creates a DR transaction) =====
   const onWithdraw = async () => {
@@ -191,11 +155,11 @@ export default function FinanceManagement() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={onExport}
+           onClick={onExportPDF}
             variant="outline"
             className="border-aqua/20 hover:bg-aqua/10"
             disabled={isLoading || isError || !data}
-            title="Export a CSV snapshot of the overview and recent activity"
+            title="Export a full PDF report: Transactions, Staff, Payments"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Report
