@@ -8,10 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { formatCurrency } from "../../utils"; // <-- Rs formatter
+import { formatCurrency } from "../../utils"; // Rs formatter
 
 // ---- CONFIG ----
-// Common Sri Lanka contributions
 const EPF_RATE = 0.08; // 8% employee (deducted from net)
 const ETF_RATE = 0.03; // 3% employer (usually NOT deducted from net)
 const INCLUDE_ETF_IN_NET = false; // set true if you still want ETF deducted from net
@@ -23,7 +22,7 @@ export default function SalaryManagement() {
   const [showForm, setShowForm] = useState(false);
 
   const [autoContrib, setAutoContrib] = useState(true);
-  const [users, setUsers] = useState([]); // staff list for dropdown
+  const [users, setUsers] = useState([]); // STAFF list for dropdown
 
   const [form, setForm] = useState({
     staffEmail: "",
@@ -54,13 +53,22 @@ export default function SalaryManagement() {
     getList();
   }, []);
 
-  // Load users (no role filter). Hide admins in the dropdown.
+  // Load STAFF only (role === "staff")
   useEffect(() => {
     axios
-      .get(`${BASE_URL}/api/users`)
+      .get(`${BASE_URL}/api/users?role=staff`, { headers: { Accept: "application/json" } })
       .then(({ data }) => {
-        const list = (data || []).filter((u) => (u.role || "").toLowerCase() !== "admin");
-        setUsers(list);
+        const list = Array.isArray(data) ? data : [];
+        // Safety: enforce role check client-side too
+        const staffOnly = list.filter((u) => (u.role || "").toLowerCase() === "staff");
+        // Normalize & dedupe by email just in case
+        const byEmail = new Map();
+        staffOnly.forEach((u) => {
+          const email = (u.email || "").trim().toLowerCase();
+          if (!email) return;
+          if (!byEmail.has(email)) byEmail.set(email, u);
+        });
+        setUsers(Array.from(byEmail.values()));
       })
       .catch(() => setUsers([]));
   }, []);
@@ -96,6 +104,22 @@ export default function SalaryManagement() {
     return { daily, hourly, otW, otH, gross, net };
   }, [form]);
 
+  const resetForm = () =>
+    setForm({
+      staffEmail: "",
+      staffName: "",
+      periodStart: "",
+      periodEnd: "",
+      basicSalary: 0,
+      allowances: 0,
+      otHoursWeekday: 0,
+      otHoursHoliday: 0,
+      epf: 0,
+      etf: 0,
+      loan: 0,
+      tax: 0,
+    });
+
   const onSubmit = async () => {
     try {
       if (!form.staffEmail || !form.staffName || !form.periodStart || !form.periodEnd || !form.basicSalary) {
@@ -114,20 +138,7 @@ export default function SalaryManagement() {
       });
       toast.success("Salary run saved");
       setShowForm(false);
-      setForm({
-        staffEmail: "",
-        staffName: "",
-        periodStart: "",
-        periodEnd: "",
-        basicSalary: 0,
-        allowances: 0,
-        otHoursWeekday: 0,
-        otHoursHoliday: 0,
-        epf: 0,
-        etf: 0,
-        loan: 0,
-        tax: 0,
-      });
+      resetForm();
       getList();
     } catch (e) {
       toast.error(e?.response?.data?.error || "Operation failed");
@@ -150,9 +161,6 @@ export default function SalaryManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Salary Management</h1>
-          <p className="text-muted-foreground">
-            Create payroll, calculate daily/hourly salaries, and record deductions
-          </p>
         </div>
         <Button onClick={() => setShowForm((s) => !s)} className="bg-gradient-to-r from-primary to-black">
           <Plus className="w-4 h-4 mr-2" /> New Salary Run
@@ -175,24 +183,28 @@ export default function SalaryManagement() {
                 <Select
                   value={form.staffEmail}
                   onValueChange={(email) => {
-                    const u = users.find((x) => x.email === email);
-                    const name = u ? `${u.firstName} ${u.lastName}` : "";
+                    const u = users.find((x) => (x.email || "").toLowerCase() === email.toLowerCase());
+                    const name = u ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "";
                     setForm({ ...form, staffEmail: email, staffName: name });
                   }}
                 >
                   <SelectTrigger className="border-aqua/20">
-                    <SelectValue placeholder="Select staff" />
+                    <SelectValue placeholder={users.length ? "Select staff" : "No staff found"} />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((u) => (
-                      <SelectItem key={u.email} value={u.email}>
-                        {u.firstName} {u.lastName} — {u.email}
+                      <SelectItem key={u.email} value={(u.email || "").toLowerCase()}>
+                        {`${u.firstName || ""} ${u.lastName || ""}`.trim()} — {u.email}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <div className="text-xs text-muted-foreground">
-                  {form.staffName ? `Name: ${form.staffName}` : "Select a staff email to auto-fill name"}
+                  {form.staffName
+                    ? `Name: ${form.staffName}`
+                    : users.length
+                    ? "Select a staff email to auto-fill name"
+                    : "Ask admin to add staff users"}
                 </div>
               </div>
               <div className="space-y-2">
