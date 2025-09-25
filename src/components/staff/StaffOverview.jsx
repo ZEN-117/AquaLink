@@ -1,16 +1,103 @@
+// src/components/staff/StaffOverview.jsx
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckSquare, Clock, Package, DollarSign, Calendar, AlertCircle } from "lucide-react";
+import { formatCurrency } from "@/utils";
 
-const StaffOverview = () => {
-  const stats = [
-    { title: "Tasks Completed", value: "24", total: "30", progress: 80, icon: CheckSquare, color: "text-green-600" },
-    { title: "Hours Worked", value: "38.5", target: "40", progress: 96, icon: Clock, color: "text-blue-600" },
-    { title: "Stock Managed", value: "156", unit: "items", progress: 85, icon: Package, color: "text-purple-600" },
-    { title: "This Month Salary", value: "Rs. 3,200", status: "On Track", progress: 100, icon: DollarSign, color: "text-green-600" },
-  ];
+const BASE_URL = "http://localhost:5000";
 
+// --- helpers ---
+function getCurrentUserEmail() {
+  try {
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u?.email) return String(u.email).trim().toLowerCase();
+    }
+  } catch {}
+  const alt = localStorage.getItem("userEmail");
+  if (alt) return String(alt).trim().toLowerCase();
+  return "";
+}
+
+function isSameMonthYear(d, m, y) {
+  const x = d ? new Date(d) : null;
+  return !!x && x.getMonth() === m && x.getFullYear() === y;
+}
+
+export default function StaffOverview() {
+  // dynamic stats coming from finance
+  const [thisMonthNet, setThisMonthNet] = useState(0);
+  const [thisMonthOT, setThisMonthOT] = useState(0); // overtime hours this month
+  const [loading, setLoading] = useState(true);
+
+  const staffEmail = getCurrentUserEmail();
+
+  const loadFinance = async () => {
+    try {
+      setLoading(true);
+      if (!staffEmail) {
+        setThisMonthNet(0);
+        setThisMonthOT(0);
+        return;
+      }
+      const { data } = await axios.get(
+        `${BASE_URL}/api/salaries?email=${encodeURIComponent(staffEmail)}`
+      );
+      const list = Array.isArray(data) ? data : [];
+
+      // find the salary run for THIS month (by periodStart or periodEnd)
+      const now = new Date();
+      const m = now.getMonth();
+      const y = now.getFullYear();
+
+      const thisMonthRuns = list.filter(
+        (r) =>
+          isSameMonthYear(r.periodStart, m, y) || isSameMonthYear(r.periodEnd, m, y)
+      );
+
+      // choose the latest by periodEnd (fallback to createdAt)
+      const latest =
+        thisMonthRuns
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.periodEnd || b.createdAt || 0) -
+              new Date(a.periodEnd || a.createdAt || 0)
+          )[0] || null;
+
+      if (!latest) {
+        setThisMonthNet(0);
+        setThisMonthOT(0);
+      } else {
+        const ot =
+          (Number(latest.otHoursWeekday || 0) || 0) +
+          (Number(latest.otHoursHoliday || 0) || 0);
+        setThisMonthOT(ot);
+        setThisMonthNet(Number(latest.netSalary || 0) || 0);
+      }
+    } catch {
+      setThisMonthNet(0);
+      setThisMonthOT(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFinance();
+
+    // live refresh from SSE
+    const ev = new EventSource(`${BASE_URL}/api/salaries/events`);
+    ev.onmessage = () => loadFinance();
+    return () => ev.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffEmail]);
+
+  // ---- demo/static bits you already had ----
   const todaysTasks = [
     { task: "Stock inventory check", priority: "high", due: "9:00 AM", completed: false },
     { task: "Customer order processing", priority: "medium", due: "11:30 AM", completed: true },
@@ -27,12 +114,67 @@ const StaffOverview = () => {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'outline';
+      case "high":
+        return "destructive";
+      case "medium":
+        return "default";
+      case "low":
+        return "secondary";
+      default:
+        return "outline";
     }
   };
+
+  // ---- build the four tiles ----
+  // target of 40 hours is a weekly-like target; here we treat it as an OT goal
+  const HOURS_TARGET = 40;
+  const hoursProgress = Math.max(
+    0,
+    Math.min(100, Math.round((thisMonthOT / HOURS_TARGET) * 100))
+  );
+
+  const stats = useMemo(
+    () => [
+      {
+        title: "Tasks Completed",
+        value: "24",
+        total: "30",
+        progress: 80,
+        icon: CheckSquare,
+        color: "text-green-600",
+        footer: "80% of 30",
+      },
+      {
+        title: "Hours Worked",
+        // we’re showing overtime hours here (until attendance is implemented)
+        value: loading ? "…" : `${thisMonthOT}h`,
+        target: `${HOURS_TARGET}`,
+        progress: hoursProgress,
+        icon: Clock,
+        color: "text-blue-600",
+        footer: `${hoursProgress}% of ${HOURS_TARGET}h OT`,
+      },
+      {
+        title: "Stock Managed",
+        value: "156",
+        unit: "items",
+        progress: 85,
+        icon: Package,
+        color: "text-purple-600",
+        footer: "85% items",
+      },
+      {
+        title: "This Month Salary",
+        value: loading ? "…" : formatCurrency(thisMonthNet),
+        status: thisMonthNet > 0 ? "Paid" : "Pending",
+        progress: thisMonthNet > 0 ? 100 : 0,
+        icon: DollarSign,
+        color: "text-green-600",
+        footer: thisMonthNet > 0 ? "You’re all set" : "Awaiting payroll",
+      },
+    ],
+    [loading, thisMonthOT, hoursProgress, thisMonthNet]
+  );
 
   return (
     <div className="space-y-6">
@@ -54,7 +196,10 @@ const StaffOverview = () => {
               <div className="mt-2">
                 <Progress value={stat.progress} className="w-full" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stat.progress}% {stat.target && `of ${stat.target}`} {stat.unit && stat.unit}
+                  {stat.footer ||
+                    `${stat.progress}% ${stat.target ? `of ${stat.target}` : ""} ${
+                      stat.unit ? stat.unit : ""
+                    }`}
                 </p>
               </div>
             </CardContent>
@@ -75,16 +220,18 @@ const StaffOverview = () => {
           <CardContent>
             <div className="space-y-4">
               {todaysTasks.map((task, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-aqua/10 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 border border-aqua/10 rounded-lg"
+                >
                   <div className="flex items-start gap-3">
-                    <input 
-                      type="checkbox" 
-                      checked={task.completed}
-                      className="mt-1"
-                      readOnly
-                    />
+                    <input type="checkbox" checked={task.completed} className="mt-1" readOnly />
                     <div className="space-y-1">
-                      <p className={`text-sm font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                      <p
+                        className={`text-sm font-medium ${
+                          task.completed ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
                         {task.task}
                       </p>
                       <div className="flex items-center gap-2">
@@ -98,7 +245,7 @@ const StaffOverview = () => {
                       </div>
                     </div>
                   </div>
-                  {!task.completed && task.priority === 'high' && (
+                  {!task.completed && task.priority === "high" && (
                     <AlertCircle className="w-4 h-4 text-red-500" />
                   )}
                 </div>
@@ -171,6 +318,4 @@ const StaffOverview = () => {
       </Card>
     </div>
   );
-};
-
-export default StaffOverview;
+}
