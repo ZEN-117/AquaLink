@@ -48,7 +48,7 @@ const StaffSalary = () => {
       </div>
 
       {/* Current Month Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-aqua/10">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Net Pay This Month</CardTitle>
@@ -91,72 +91,7 @@ const StaffSalary = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Current Month Breakdown */}
-        <Card className="border-aqua/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              October 2024 Breakdown
-            </CardTitle>
-            <CardDescription>Detailed payment calculation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 border border-aqua/10 rounded-lg">
-                <span className="font-medium">Base Salary</span>
-                <span className="text-lg font-bold">${currentMonth.baseSalary.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 border border-green-200 rounded-lg bg-green-50/50">
-                <span className="font-medium text-green-700">Overtime Pay</span>
-                <span className="text-lg font-bold text-green-600">+${currentMonth.overtime}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 border border-blue-200 rounded-lg bg-blue-50/50">
-                <span className="font-medium text-blue-700">Performance Bonus</span>
-                <span className="text-lg font-bold text-blue-600">+${currentMonth.bonus}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 border border-red-200 rounded-lg bg-red-50/50">
-                <span className="font-medium text-red-700">Deductions</span>
-                <span className="text-lg font-bold text-red-600">-${currentMonth.deductions}</span>
-              </div>
-              <div className="border-t pt-3">
-                <div className="flex items-center justify-between p-3 border-2 border-aqua/20 rounded-lg bg-aqua/5">
-                  <span className="font-bold text-lg">Net Pay</span>
-                  <span className="text-2xl font-bold text-primary">${currentMonth.netPay.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Benefits Overview */}
-        <Card className="border-aqua/10">
-          <CardHeader>
-            <CardTitle>Benefits Package</CardTitle>
-            <CardDescription>Your current benefits and coverage</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-aqua/10 rounded-lg">
-                  <div className="space-y-1">
-                    <div className="font-medium">{benefit.name}</div>
-                    <div className="text-sm text-muted-foreground">{benefit.coverage}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium text-primary">{benefit.value}</div>
-                    <Badge variant={benefit.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
-                      {benefit.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </div> */}
 
       {/* Payment History */}
       <Card className="border-aqua/10">
@@ -209,7 +144,7 @@ const StaffSalary = () => {
       </Card>
 
       {/* Upcoming Payments */}
-      <Card className="border-aqua/10">
+      {/* <Card className="border-aqua/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -235,7 +170,7 @@ const StaffSalary = () => {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };
