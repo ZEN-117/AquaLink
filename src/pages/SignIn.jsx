@@ -1,3 +1,4 @@
+// src/pages/SignIn.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,27 +11,19 @@ import toast from "react-hot-toast";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
   const navigate = useNavigate();
   const { login, loading, error, clearError } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    clearError();
+    clearError?.();
 
-    // Basic validation
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields", {
         position: "top-center",
-        style: {
-          background: "#ef4444",
-          color: "white",
-          border: "1px solid #dc2626"
-        }
+        style: { background: "#ef4444", color: "white", border: "1px solid #dc2626" },
       });
       return;
     }
@@ -38,54 +31,61 @@ const SignIn = () => {
     if (!formData.email.includes("@")) {
       toast.error("Please enter a valid email address", {
         position: "top-center",
-        style: {
-          background: "#ef4444",
-          color: "white",
-          border: "1px solid #dc2626"
-        }
+        style: { background: "#ef4444", color: "white", border: "1px solid #dc2626" },
       });
       return;
     }
 
     const result = await login(formData.email, formData.password);
-    
-    if (result.success) {
+
+    if (result?.success) {
+      // normalize values
+      const roleLower =
+        (result.role || result.user?.role || "").toString().trim().toLowerCase();
+      const emailLC =
+        (result.user?.email || formData.email || "").toString().trim().toLowerCase();
+
+      // persist for staff salary filtering
+      const userForStorage = {
+        email: emailLC,
+        role: roleLower,
+        firstName: result.user?.firstName || "",
+        lastName: result.user?.lastName || "",
+        // keep anything else you might need later:
+        token: result.token || undefined,
+        _id: result.user?._id || undefined,
+      };
+      localStorage.setItem("user", JSON.stringify(userForStorage));
+      localStorage.setItem("userEmail", emailLC); // legacy/fallback key used by StaffSalary
+
       toast.success("Login successful!", {
         position: "top-center",
-        style: {
-          background: "#22c55e",
-          color: "white",
-          border: "1px solid #16a34a"
-        }
+        style: { background: "#22c55e", color: "white", border: "1px solid #16a34a" },
       });
-      // Navigate based on role
-      if (result.role === "User") {
+
+      // role-based navigation (use normalized role)
+      if (roleLower === "user") {
         navigate("/userdashboard");
-      } else if (result.role === "owner") {
+      } else if (roleLower === "owner") {
         navigate("/dashboard");
-      }else if(result.role === "admin"){
+      } else if (roleLower === "admin") {
         navigate("/admindashboard");
-      }else if(result.role === "staff"){
+      } else if (roleLower === "staff") {
         navigate("/staffdashboard");
+      } else {
+        // unknown role: send to a safe default
+        navigate("/");
       }
     } else {
-      // Error message will be shown via toast from AuthContext
-      toast.error(result.error || "Login failed. Please try again.", {
+      toast.error(result?.error || "Login failed. Please try again.", {
         position: "top-center",
-        style: {
-          background: "#ef4444",
-          color: "white",
-          border: "1px solid #dc2626"
-        }
+        style: { background: "#ef4444", color: "white", border: "1px solid #dc2626" },
       });
     }
   };
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
@@ -118,7 +118,7 @@ const SignIn = () => {
                   placeholder="Enter your email"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -137,7 +137,7 @@ const SignIn = () => {
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword((s) => !s)}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -148,40 +148,37 @@ const SignIn = () => {
                 </div>
               </div>
 
-              
               <div className="flex items-center justify-between">
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-aqua hover:text-aqua-light transition-colors story-link"
                 >
                   Forgot password?
                 </Link>
               </div>
-              
+
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105">
+                className="w-full bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105"
+              >
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-            
+
             <div className="mt-6 text-center space-y-3">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link 
-                  to="/signup" 
+                <Link
+                  to="/signup"
                   className="text-aqua hover:text-aqua-light transition-colors story-link"
                 >
                   Sign up
                 </Link>
               </p>
-              
+
               <div className="pt-2 border-t border-aqua/10">
-                <Link 
-                  to="/" 
-                  className="text-sm text-muted-foreground hover:text-aqua transition-colors story-link"
-                >
+                <Link to="/" className="text-sm text-muted-foreground hover:text-aqua transition-colors story-link">
                   ← Go to Home
                 </Link>
               </div>
