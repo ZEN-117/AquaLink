@@ -1,3 +1,4 @@
+// src/pages/Finance/ManageTransactions.jsx
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,17 +20,28 @@ const types = [
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// --- VALIDATION HELPERS ---
+const toISODate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+const isValidPositive = (n) => typeof n === "number" && !Number.isNaN(n) && n > 0;
+const isOnOrAfter = (a, b) => {
+  // a >= b (both "YYYY-MM-DD")
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return da.getTime() >= db.getTime();
+};
+
 export default function ManageTransactions() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     amount: 0,
     type: "CR",
-    date: todayISO(),        // transaction date
-    recordedAt: todayISO(),  // updated date
+    date: todayISO(),        // Transaction Date (business date)
+    recordedAt: todayISO(),  // Updated Date (recorded on site)
     description: "",
   });
 
@@ -37,7 +49,7 @@ export default function ManageTransactions() {
     try {
       const { data } = await axios.get(`${BASE_URL}/api/transactions`);
       setItems(Array.isArray(data) ? data : []);
-    } catch (e) {
+    } catch {
       toast.error("Failed to load transactions");
     }
   };
@@ -66,11 +78,53 @@ export default function ManageTransactions() {
       description: "",
     });
 
+  const openNew = () => {
+    reset();
+    setEditing(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelForm = () => {
+    reset();
+    setEditing(null);
+    setShowForm(false);
+  };
+
+  // ---- VALIDATE BEFORE SUBMIT ----
+  const validate = () => {
+    const amt = Number(form.amount);
+    if (!isValidPositive(amt)) {
+      toast.error("Amount must be greater than 0.");
+      return false;
+    }
+    if (!form.date) {
+      toast.error("Please select a Transaction Date.");
+      return false;
+    }
+    if (!form.recordedAt) {
+      toast.error("Please select an Updated Date.");
+      return false;
+    }
+    if (!isOnOrAfter(form.recordedAt, form.date)) {
+      toast.error("Updated Date must be on or after the Transaction Date.");
+      return false;
+    }
+    // (Optional) require name
+    if (!String(form.name || "").trim()) {
+      toast.error("Please enter a Name for the transaction.");
+      return false;
+    }
+    return true;
+  };
+
   const submit = async () => {
+    if (!validate()) return;
+
     try {
       const payload = {
         ...form,
-        amount: Number(form.amount) || 0,
+        amount: Number(form.amount),
       };
       if (editing) {
         await axios.patch(`${BASE_URL}/api/transactions/${editing}`, payload);
@@ -81,6 +135,7 @@ export default function ManageTransactions() {
       }
       reset();
       setEditing(null);
+      setShowForm(false);
       load();
     } catch (e) {
       toast.error(e?.response?.data?.error || "Operation failed");
@@ -93,10 +148,11 @@ export default function ManageTransactions() {
       name: item.name || "",
       amount: item.amount ?? 0,
       type: item.type || "CR",
-      date: item.date ? new Date(item.date).toISOString().slice(0, 10) : todayISO(),
-      recordedAt: item.recordedAt ? new Date(item.recordedAt).toISOString().slice(0, 10) : todayISO(),
+      date: item.date ? toISODate(item.date) : todayISO(),
+      recordedAt: item.recordedAt ? toISODate(item.recordedAt) : todayISO(),
       description: item.description || "",
     });
+    setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -111,6 +167,14 @@ export default function ManageTransactions() {
     }
   };
 
+  // Keep Updated Date >= Transaction Date by adjusting min attribute and auto-correcting if needed
+  useEffect(() => {
+    if (!isOnOrAfter(form.recordedAt, form.date)) {
+      setForm((prev) => ({ ...prev, recordedAt: prev.date }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.date]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -119,7 +183,7 @@ export default function ManageTransactions() {
           <h1 className="text-3xl font-bold">Manage Transactions</h1>
           <p className="text-muted-foreground">Create, edit, and delete financial records</p>
         </div>
-        <Button onClick={() => { reset(); setEditing(null); }} className="bg-gradient-to-r from-primary to-black">
+        <Button onClick={openNew} className="bg-gradient-to-r from-primary to-black">
           <Plus className="w-4 h-4 mr-2" /> New Transaction
         </Button>
       </div>
@@ -135,98 +199,102 @@ export default function ManageTransactions() {
       </div>
 
       {/* Form */}
-      <Card className="border-aqua/20">
-        <CardHeader>
-          <CardTitle>{editing ? "Edit Transaction" : "Add Transaction"}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Create a new financial entry
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Row 1: Name / Amount */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {showForm && (
+        <Card className="border-aqua/20">
+          <CardHeader>
+            <CardTitle>{editing ? "Edit Transaction" : "Add Transaction"}</CardTitle>
+            <p className="text-sm text-muted-foreground">Create a new financial entry</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Row 1: Name / Amount */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Amount (Rs)</Label>
+                <Input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  onWheel={(e) => e.currentTarget.blur()} // avoid accidental scroll changes
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Type / Transaction Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(v) => setForm({ ...form, type: v })}
+                >
+                  <SelectTrigger className="border-aqua/20">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {types.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Transaction Date</Label>
+                <Input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Updated Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Updated Date</Label>
+                <Input
+                  type="date"
+                  min={form.date} // cannot be before Transaction Date
+                  value={form.recordedAt}
+                  onChange={(e) => setForm({ ...form, recordedAt: e.target.value })}
+                />
+              </div>
+              <div className="hidden md:block" />
+            </div>
+
+            {/* Description */}
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label>Description</Label>
               <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Name"
+                placeholder="Enter description (max 100 characters)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                maxLength={100}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Amount (Rs)</Label>
-              <Input
-                type="number"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-              />
-            </div>
-          </div>
 
-          {/* Row 2: Type / Transaction Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select
-                value={form.type}
-                onValueChange={(v) => setForm({ ...form, type: v })}
-              >
-                <SelectTrigger className="border-aqua/20">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {types.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex gap-2">
+              <Button onClick={submit} className="bg-gradient-to-r from-primary to-black">
+                {editing ? "Update" : "Create"}
+              </Button>
+              <Button variant="outline" onClick={cancelForm}>
+                Cancel
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label>Transaction Date</Label>
-              <Input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-              />
-            </div>
-          </div>
-
-          {/* Row 3: Updated Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Updated Date</Label>
-              <Input
-                type="date"
-                value={form.recordedAt}
-                onChange={(e) => setForm({ ...form, recordedAt: e.target.value })}
-              />
-            </div>
-            <div className="hidden md:block" />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Input
-              placeholder="Enter description (max 100 characters)"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              maxLength={100}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button onClick={submit} className="bg-gradient-to-r from-primary to-black">
-              {editing ? "Update" : "Create"}
-            </Button>
-            <Button variant="outline" onClick={() => { reset(); setEditing(null); }}>
-              Cancel
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* List */}
       <div className="space-y-3">
