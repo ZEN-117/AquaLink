@@ -65,7 +65,7 @@ const SignIn = () => {
         navigate("/dashboard");
       }else if(result.role === "admin"){
         navigate("/admindashboard");
-      }else if(result.role === "staff"){
+      }else if(result.role === "staff" || result.role === "Staff" ){
         navigate("/staffdashboard");
       }
     } else {

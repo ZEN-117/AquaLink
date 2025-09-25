@@ -16,7 +16,7 @@ const API_BASE = "http://localhost:5000";
 
 const Cart = () => {
   const { user } = useAuth();
-  const uid = useMemo(() => (user?._id || "guest"), [user]); // ✅ single source of truth
+  const email = user?.email;
 
   const [cartItems, setCartItems] = useState([]);
   const [promoCode, setPromoCode] = useState("");
@@ -24,15 +24,14 @@ const Cart = () => {
 
   const fetchCart = async () => {
     try {
-      // ✅ fetch using the same uid used when adding to cart
-      const { data } = await axios.get(`${API_BASE}/api/cart/${uid}`);
+      const { data } = await axios.get(`${API_BASE}/api/cart/${email}`);
       const items = (data?.items || []).map((i) => ({
-        id: i?.productId?._id || i?.productId?.id,         // tolerate either key
-        name: i?.productId?.title || "Product",
-        price: Number(i?.productId?.price ?? 0),
-        image: i?.productId?.image,
+        id: i?.product?._id,
+        name: i?.product?.title || "Product",
+        price: Number(i?.product?.price ?? 0),
+        image: i?.product?.image,
         quantity: Number(i?.quantity ?? 1),
-        description: i?.productId?.description || "",
+        description: i?.product?.description || "",
       }));
       setCartItems(items);
     } catch (e) {
@@ -43,16 +42,42 @@ const Cart = () => {
 
   useEffect(() => {
     fetchCart();
-    // optional: re-fetch if user changes (login/logout)
-  }, [uid]);
+  }, [email]);
 
   const updateQuantity = (id, newQty) => {
     if (newQty < 1) return;
     setCartItems((items) => items.map((it) => (it.id === id ? { ...it, quantity: newQty } : it)));
   };
 
-  const removeItem = (id) => setCartItems((items) => items.filter((it) => it.id !== id));
-  const clearCart = () => setCartItems([]);
+// Remove one item from cart
+const removeItem = async (id) => {
+  try {
+    await axios.delete(`${API_BASE}/api/cart/remove`, {
+      data: { email, productId: id }, 
+    });
+    setCartItems((items) => items.filter((it) => it.id !== id));
+    toast.success("Item removed from cart");
+  } catch (e) {
+    console.error("❌ removeItem error:", e);
+    toast.error("Failed to remove item");
+  }
+};
+
+// Clear all items from cart
+const clearCart = async () => {
+  try {
+    await axios.delete(`${API_BASE}/api/cart/clear`, {
+      data: { email }, 
+    });
+    setCartItems([]);
+    toast.success("Cart cleared");
+  } catch (e) {
+    console.error("❌ clearCart error:", e);
+    toast.error("Failed to clear cart");
+  }
+};
+
+
 
   const applyPromoCode = () => {
     const codes = { FISH10: 0.1, NEWBIE: 0.15, GUPPY20: 0.2 };
@@ -69,7 +94,7 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     try {
-      await axios.post(`${API_BASE}/api/orders/checkout`, { userId: uid });
+      await axios.post(`${API_BASE}/api/orders/checkout`, { email }); // ✅ send email instead of userId
       toast.success("Order placed!");
       setCartItems([]);
     } catch (e) {

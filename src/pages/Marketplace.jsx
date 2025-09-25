@@ -12,6 +12,7 @@ import { Search, Filter, Grid, List } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { useUserDetails } from "../hooks/useUserDetails";
 
 const API_BASE = "http://localhost:5000";
 
@@ -26,6 +27,12 @@ const sortOptions = [
 
 const Marketplace = () => {
   const { user } = useAuth();
+  const email = user?.email;
+  
+  // Debug: Log user object to see what fields are available
+  console.log('User object in Marketplace:', user);
+  console.log('User email from useAuth:', user?.email);
+  console.log('User email from useUserDetails:', email);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -104,10 +111,15 @@ const Marketplace = () => {
     })
   );
 
-  const addToCart = async (productId) => {
+    const addToCart = async (productId) => {
+
+      if (!email) {
+      toast.error("You must be logged in to add to cart");
+      return;
+  }
     try {
       await axios.post(`${API_BASE}/api/cart/add`, {
-        userId: uid,                         // ✅ consistent with Cart page
+        email: email || user?.email,      // ✅ use email from useUserDetails or AuthContext
         productId: String(productId),        // ✅ ensure string ObjectId
         quantity: 1,
       });
@@ -117,6 +129,7 @@ const Marketplace = () => {
       toast.error("Failed to add to cart");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
