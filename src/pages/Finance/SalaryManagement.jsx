@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrency } from "../../utils"; // <-- Rs formatter
 
 // ---- CONFIG ----
 // Common Sri Lanka contributions
@@ -42,8 +43,8 @@ export default function SalaryManagement() {
   // Load salary runs
   const getList = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/api/salaries`);
-      setItems(data);
+      const { data } = await axios.get(`${BASE_URL}/api/salaries`, { headers: { Accept: "application/json" } });
+      setItems(data || []);
     } catch {
       toast.error("Failed to fetch salaries");
     }
@@ -308,14 +309,14 @@ export default function SalaryManagement() {
 
             {/* Preview Calculations */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4">
-              <Stat label="Daily Salary" value={`$${calc.daily.toFixed(2)}`} />
-              <Stat label="Hourly Salary" value={`$${calc.hourly.toFixed(2)}`} />
-              <Stat label="OT Weekday Amt" value={`$${calc.otW.toFixed(2)}`} />
-              <Stat label="OT Holiday Amt" value={`$${calc.otH.toFixed(2)}`} />
-              <Stat label="Gross" value={`$${calc.gross.toFixed(2)}`} />
+              <Stat label="Daily Salary" value={formatCurrency(calc.daily)} />
+              <Stat label="Hourly Salary" value={formatCurrency(calc.hourly)} />
+              <Stat label="OT Weekday Amt" value={formatCurrency(calc.otW)} />
+              <Stat label="OT Holiday Amt" value={formatCurrency(calc.otH)} />
+              <Stat label="Gross" value={formatCurrency(calc.gross)} />
             </div>
             <div className="pt-2">
-              <Stat big label="Net Salary" value={`$${calc.net.toFixed(2)}`} />
+              <Stat big label="Net Salary" value={formatCurrency(calc.net)} />
             </div>
 
             <div className="flex gap-2">
@@ -333,39 +334,41 @@ export default function SalaryManagement() {
       {/* List */}
       <div className="space-y-3">
         <h2 className="text-xl font-semibold">Salary Runs</h2>
-        {items.map((it) => (
-          <Card key={it._id} className="border-aqua/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <div className="font-semibold">
-                  {it.staffName} ({it.staffEmail})
+        {items.map((it) => {
+          const otTotal = Number(it.otWeekdayAmt || 0) + Number(it.otHolidayAmt || 0);
+          return (
+            <Card key={it._id} className="border-aqua/10">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">
+                    {it.staffName} ({it.staffEmail})
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(it.periodStart).toLocaleDateString()} –{" "}
+                    {new Date(it.periodEnd).toLocaleDateString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Basic {formatCurrency(it.basicSalary)} • Allowances {formatCurrency(it.allowances)} • OT{" "}
+                    {formatCurrency(otTotal)}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(it.periodStart).toLocaleDateString()} –{" "}
-                  {new Date(it.periodEnd).toLocaleDateString()}
+                <div className="flex items-center gap-3">
+                  <div className="text-lg font-bold text-foreground">
+                    {formatCurrency(it.netSalary)}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="hover:bg-red-500/10 hover:text-red-500"
+                    onClick={() => onDelete(it._id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Basic ${Number(it.basicSalary).toFixed(2)} • Allowances $
-                  {Number(it.allowances).toFixed(2)} • OT $
-                  {Number((it.otWeekdayAmt || 0) + (it.otHolidayAmt || 0)).toFixed(2)}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-lg font-bold text-foreground">
-                  ${Number(it.netSalary).toFixed(2)}
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="hover:bg-red-500/10 hover:text-red-500"
-                  onClick={() => onDelete(it._id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
         {items.length === 0 && <div className="text-muted-foreground">No salary runs yet.</div>}
       </div>
     </div>

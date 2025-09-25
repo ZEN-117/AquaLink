@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Search } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrency } from "../../utils"; // Rs formatter (centralized)
 
 export default function ManageTransactions() {
   const [items, setItems] = useState([]);
@@ -28,8 +29,8 @@ export default function ManageTransactions() {
 
   const getList = async () => {
     try {
-      const { data } = await axios.get(`${base}/api/transactions`);
-      setItems(data);
+      const { data } = await axios.get(`${base}/api/transactions`, { headers: { Accept: "application/json" } });
+      setItems(data || []);
     } catch (e) {
       toast.error(e?.response?.data?.error || "Failed to fetch transactions");
     }
@@ -58,7 +59,7 @@ export default function ManageTransactions() {
       // Validate date (not in future)
       const selectedDate = new Date(form.date);
       const today = new Date();
-      today.setHours(23, 59, 59, 999); // End of today
+      today.setHours(23, 59, 59, 999);
       if (selectedDate > today) {
         return toast.error("Cannot select future dates");
       }
@@ -115,11 +116,18 @@ export default function ManageTransactions() {
     }
   };
 
-  const filtered = items.filter(
+  const filtered = (items || []).filter(
     (i) =>
       (i.name || "").toLowerCase().includes(search.toLowerCase()) ||
       (i.description || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  // Helper to render +/–Rs with nice formatting
+  const renderSignedAmount = (row) => {
+    const sign = row.type === "DR" ? "-" : "+"; // DR = expense, CR = income
+    const amt = Number(row.amount || 0);
+    return `${sign}${formatCurrency(amt)}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -168,7 +176,7 @@ export default function ManageTransactions() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (Rs.)</Label>
+                <Label htmlFor="amount">Amount (Rs)</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -264,7 +272,7 @@ export default function ManageTransactions() {
                     row.type === "CR" ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {row.type === "CR" ? "+" : "-"}Rs. {Number(row.amount || 0).toFixed(2)}
+                  {renderSignedAmount(row)}
                 </div>
                 <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
                   <Edit className="w-4 h-4" />

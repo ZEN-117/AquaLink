@@ -1,6 +1,7 @@
 // src/lib/exportFinancePDF.js
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // <— import the function, don't rely on side-effects
+import autoTable from "jspdf-autotable"; // call as a function we import
+import { formatCurrency } from "../utils";
 
 // Point straight at your backend in dev. If you add a Vite proxy, switch to "/api".
 const API_BASE = "http://localhost:5000/api";
@@ -55,7 +56,10 @@ export async function exportFinancePDF() {
 
   // 2) Rows
   const txRows = (txs || [])
-    .sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0))
+    .sort(
+      (a, b) =>
+        new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0)
+    )
     .map((t, i) => {
       const staffUser = usersById.get?.(t.staffId);
       const staffName = staffUser
@@ -65,7 +69,7 @@ export async function exportFinancePDF() {
         pad(i + 1),
         t.name || t.title || "",
         (t.type || "").toUpperCase(),
-        Number(t.amount || 0).toFixed(2),
+        formatCurrency(t.amount),
         t.date
           ? new Date(t.date).toLocaleDateString()
           : t.createdAt
@@ -89,12 +93,15 @@ export async function exportFinancePDF() {
     ]);
 
   const payRows = (pays || [])
-    .sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0))
+    .sort(
+      (a, b) =>
+        new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0)
+    )
     .map((p, i) => [
       "P" + pad(i + 1),
       p.orderId || "",
       p.buyerId || "",
-      Number(p.amount || 0).toFixed(2),
+      formatCurrency(p.amount), // <-- fixed: use p.amount (not t.amount)
       (p.method || "").toUpperCase(),
       p.date
         ? new Date(p.date).toLocaleDateString()
