@@ -25,6 +25,7 @@ const Header = () => {
     { name: "About", action: () => scrollToSection("about") },
     { name: "Marketplace", href: "/marketplace" },
     { name: "Contact", action: () => scrollToSection("contact") },
+    { name: "Feedback", action: () => scrollToSection("feedback") },
   ];
 
 
