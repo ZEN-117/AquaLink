@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
+import { useUserDetails } from "@/hooks/useUserDetails";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Edit, Trash2, Plus, Search, ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
 
 const InventoryPage = () => {
+  const { user, displayName, fullName } = useUserDetails();
   const [inventory, setInventory] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -38,6 +40,13 @@ const InventoryPage = () => {
 
   // show/hide new category section in add item modal
   const [showNewCategorySection, setShowNewCategorySection] = useState(false);
+
+  // edit category states
+  const [showEditCategory, setShowEditCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editCategoryThreshold, setEditCategoryThreshold] = useState(10);
+  const [selectedCategoryToEdit, setSelectedCategoryToEdit] = useState("");
 
   // assign dialog (unchanged)
   const [showAssign, setShowAssign] = useState(false);
@@ -143,7 +152,29 @@ const InventoryPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
+      // Get item details before deletion for history logging
+      const itemToDelete = inventory.find(item => item._id === id);
+      
       await axios.delete(`http://localhost:5000/api/fishinventory/${id}`);
+      
+      // Log deletion in inventory history
+      if (itemToDelete) {
+        try {
+          await axios.post("http://localhost:5000/api/inventory-history", {
+            itemName: itemToDelete.itemName,
+            assignedSection: "N/A",
+            quantity: 0,
+            dateTime: new Date().toISOString(),
+            user: displayName || fullName || user?.email || 'Unknown User',
+            action: 'DELETED',
+            previousStock: itemToDelete.stock,
+            newStock: 0
+          });
+        } catch (historyErr) {
+          console.error("Failed to log deletion history:", historyErr);
+        }
+      }
+      
       toast.success("Item deleted successfully");
       await fetchInventoryAndCategories();
     } catch (err) {
@@ -160,50 +191,122 @@ const InventoryPage = () => {
       const stock = Number(formData.stock);
       const category = String(formData.category || "").trim().toLowerCase();
 
+      console.log("Form data validation:", { code, name, stock, category, isNaNStock: isNaN(stock) });
+      console.log("Form data object:", formData);
+
       if (!code || !name || isNaN(stock) || category === "") {
+        console.log("Validation failed:", { 
+          codeEmpty: !code, 
+          nameEmpty: !name, 
+          stockNaN: isNaN(stock), 
+          categoryEmpty: category === "" 
+        });
         return toast.error("Please fill in all required fields");
       }
 
       // validations
+      console.log("Starting validations...");
+      
       // itemCode: max 6, start with letter, letters+numbers only
-      if (code.length > 6) return toast.error("Item Code cannot exceed 6 characters");
+      if (code.length > 6) {
+        console.log("Item code too long:", code.length);
+        return toast.error("Item Code cannot exceed 6 characters");
+      }
       if (!/^[A-Za-z][A-Za-z0-9]*$/.test(code)) {
+        console.log("Item code format invalid:", code);
         return toast.error("Item Code must start with a letter and contain only letters and numbers");
       }
 
       // itemName: max 20, cannot start with number, letters/numbers/spaces/dash allowed
-      if (name.length > 35) return toast.error("Item Name cannot exceed 20 characters");
+      if (name.length > 35) {
+        console.log("Item name too long:", name.length);
+        return toast.error("Item Name cannot exceed 20 characters");
+      }
       if (!/^[A-Za-z][A-Za-z0-9\s-]*$/.test(name)) {
+        console.log("Item name format invalid:", name);
         return toast.error("Item Name must start with a letter and can include letters, numbers, spaces and dashes");
       }
 
       // category must exist in categories list
       const normalizedCat = category.toLowerCase();
+      console.log("Checking category:", normalizedCat, "Available categories:", categories.map(c => c.name));
       const catExists = categories.some((c) => c.name === normalizedCat);
       if (!catExists) {
+        console.log("Category does not exist:", normalizedCat);
         return toast.error("Please select a valid category or add it");
       }
 
-      if (stock <= 0) return toast.error("Quantity must be greater than 0");
-      if (stock > 5000) return toast.error("Quantity cannot exceed 5000"); // Added this validation
+      if (stock <= 0) {
+        console.log("Stock too low:", stock);
+        return toast.error("Quantity must be greater than 0");
+      }
+      if (stock > 5000) {
+        console.log("Stock too high:", stock);
+        return toast.error("Quantity cannot exceed 5000");
+      }
+      
+      console.log("All validations passed, proceeding with API call...");
 
       if (editingItem) {
         // update
+        console.log("Updating item:", { code, name, stock, category: normalizedCat });
+        const previousStock = editingItem.stock;
         await axios.put(`http://localhost:5000/api/fishinventory/${editingItem._id}`, {
           itemCode: code,
           itemName: name,
           stock,
           category: normalizedCat,
         });
+        
+        // Log update in inventory history
+        try {
+          await axios.post("http://localhost:5000/api/inventory-history", {
+            itemName: name,
+            assignedSection: "N/A",
+            quantity: stock - previousStock,
+            dateTime: new Date().toISOString(),
+            user: displayName || fullName || user?.email || 'Unknown User',
+            action: 'UPDATED',
+            previousStock: previousStock,
+            newStock: stock
+          });
+        } catch (historyErr) {
+          console.error("Failed to log update history:", historyErr);
+        }
+        
         toast.success("Item updated successfully");
       } else {
         // create
-        await axios.post("http://localhost:5000/api/fishinventory", {
+        console.log("Creating item:", { code, name, stock, category: normalizedCat });
+        console.log("Making API call to:", "http://localhost:5000/api/fishinventory");
+        
+        const createResponse = await axios.post("http://localhost:5000/api/fishinventory", {
           itemCode: code,
           itemName: name,
           stock,
           category: normalizedCat,
         });
+        
+        console.log("Item creation response:", createResponse.data);
+        
+        // Log creation in inventory history
+        try {
+          await axios.post("http://localhost:5000/api/inventory-history", {
+            itemName: name,
+            assignedSection: "N/A",
+            quantity: stock,
+            dateTime: new Date().toISOString(),
+            user: displayName || fullName || user?.email || 'Unknown User',
+            action: 'CREATED',
+            previousStock: 0,
+            newStock: stock
+          });
+        } catch (historyErr) {
+          console.error("Failed to log creation history:", historyErr);
+          console.error("History error response:", historyErr?.response?.data);
+          console.error("History error status:", historyErr?.response?.status);
+        }
+        
         toast.success("Item added successfully");
       }
 
@@ -213,7 +316,9 @@ const InventoryPage = () => {
       setShowNewCategorySection(false); // Reset new category section
       await fetchInventoryAndCategories();
     } catch (err) {
-      console.error(err);
+      console.error("Error in handleSubmit:", err);
+      console.error("Error response:", err?.response?.data);
+      console.error("Error status:", err?.response?.status);
       // If duplication or validation error, show message from backend if present
       if (err?.response?.data?.message) toast.error(err.response.data.message);
       else toast.error("Operation failed");
@@ -321,6 +426,48 @@ const InventoryPage = () => {
     }
   };
 
+  // ---------- Edit Category Handler ----------
+  const handleEditCategory = async () => {
+    if (!editingCategory || !editCategoryName.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    const threshold = Number(editCategoryThreshold);
+    if (isNaN(threshold) || threshold < 0) {
+      toast.error("Please enter a valid threshold value");
+      return;
+    }
+
+    try {
+      await axios.put(`http://localhost:5000/api/categories/${editingCategory._id}`, {
+        name: editCategoryName.trim().toLowerCase(),
+        lowStockThreshold: threshold,
+      });
+
+      toast.success("Category updated successfully");
+      setShowEditCategory(false);
+      setEditingCategory(null);
+      setEditCategoryName("");
+      setEditCategoryThreshold(10);
+      await fetchInventoryAndCategories();
+    } catch (err) {
+      console.error("Failed to update category:", err);
+      toast.error("Failed to update category");
+    }
+  };
+
+  // ---------- Handle Category Selection for Edit ----------
+  const handleCategorySelection = (categoryId) => {
+    setSelectedCategoryToEdit(categoryId);
+    const category = categories.find(c => c._id === categoryId);
+    if (category) {
+      setEditingCategory(category);
+      setEditCategoryName(category.name);
+      setEditCategoryThreshold(category.lowStockThreshold || 10);
+    }
+  };
+
   // ---------- Status / low-stock helpers ----------
   // get threshold for a category name
   const getThresholdForCategory = (catName) => {
@@ -366,6 +513,7 @@ const InventoryPage = () => {
     let anyAssigned = false;
     const lowWarnings = [];
     const updates = [];
+    const historyEntries = [];
 
     assignRows.forEach((row) => {
       if (!row.itemCode && !row.qty) return;
@@ -384,8 +532,22 @@ const InventoryPage = () => {
         row.error = `Only ${item.stock} left`;
         return;
       }
-      updates.push({ id: item._id, deduction: qty });
+      
       const newStock = Number(item.stock) - qty;
+      updates.push({ id: item._id, deduction: qty, item: item, section: row.tank });
+      
+      // Create history entry for this assignment
+      historyEntries.push({
+        itemName: item.itemName,
+        assignedSection: row.tank,
+        quantity: qty,
+        dateTime: new Date().toISOString(),
+        user: displayName || fullName || user?.email || 'Unknown User',
+        action: 'ASSIGNED',
+        previousStock: item.stock,
+        newStock: newStock
+      });
+      
       const threshold = getThresholdForCategory(item.category);
       if (newStock < threshold) lowWarnings.push(`${item.itemName} is low (${newStock} left)`);
     });
@@ -401,6 +563,7 @@ const InventoryPage = () => {
     }
 
     try {
+      // Update inventory items
       for (const u of updates) {
         const item = inventory.find((i) => i._id === u.id);
         if (item) {
@@ -408,6 +571,19 @@ const InventoryPage = () => {
           await axios.put(`http://localhost:5000/api/fishinventory/${u.id}`, { ...item, stock: newStock });
         }
       }
+
+      // Log assigned items to inventory history endpoint
+      for (const historyEntry of historyEntries) {
+        try {
+          await axios.post("http://localhost:5000/api/inventory-history", historyEntry);
+        } catch (historyErr) {
+          console.error("Failed to log assigned item:", historyErr);
+          console.error("Assignment error response:", historyErr?.response?.data);
+          console.error("Assignment error status:", historyErr?.response?.status);
+          // Don't fail the whole operation if history logging fails
+        }
+      }
+
       toast.success("Items assigned successfully");
       lowWarnings.forEach((w) => toast(w, { icon: "⚠️" }));
       setShowAssign(false);
@@ -463,6 +639,20 @@ const InventoryPage = () => {
             {/* Dropdown Menu */}
             {showMenu && (
               <div className="absolute right-0 top-12 bg-white border rounded-md shadow-lg z-50 w-48">
+                <button
+                  onClick={() => {
+                    setSelectedCategoryToEdit("");
+                    setEditCategoryName("");
+                    setEditCategoryThreshold(10);
+                    setEditingCategory(null);
+                    setShowEditCategory(true);
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm flex items-center"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Category
+                </button>
                 <button
                   onClick={() => {
                     setShowDeleteCategory(true);
@@ -763,6 +953,87 @@ const InventoryPage = () => {
                 disabled={!selectedCategory}
               >
                 Delete Category
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Category Modal */}
+      <Dialog open={showEditCategory} onOpenChange={setShowEditCategory}>
+        <DialogContent className="sm:max-w-md w-full bg-gray-200">
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="selectCategoryToEdit">Select Category to Edit</Label>
+              <select
+                id="selectCategoryToEdit"
+                value={selectedCategoryToEdit}
+                onChange={(e) => handleCategorySelection(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                <option value="">Choose a category to edit</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name.charAt(0).toUpperCase() + c.name.slice(1)} 
+                    {inventory.some(item => String(item.category).toLowerCase() === c.name.toLowerCase()) && 
+                      ` (${inventory.filter(item => String(item.category).toLowerCase() === c.name.toLowerCase()).length} items)`
+                    }
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedCategoryToEdit && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="editCategoryName">Category Name</Label>
+                  <Input
+                    id="editCategoryName"
+                    value={editCategoryName}
+                    onChange={(e) => setEditCategoryName(e.target.value)}
+                    placeholder="Enter category name"
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="editCategoryThreshold">Low Stock Threshold</Label>
+                  <Input
+                    id="editCategoryThreshold"
+                    type="number"
+                    value={editCategoryThreshold}
+                    onChange={(e) => setEditCategoryThreshold(Number(e.target.value))}
+                    placeholder="Enter threshold value"
+                    className="w-full"
+                    min="0"
+                  />
+                </div>
+              </>
+            )}
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowEditCategory(false);
+                  setEditingCategory(null);
+                  setEditCategoryName("");
+                  setEditCategoryThreshold(10);
+                  setSelectedCategoryToEdit("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleEditCategory}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={!selectedCategoryToEdit}
+              >
+                Update Category
               </Button>
             </div>
           </div>
