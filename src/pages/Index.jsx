@@ -6,6 +6,7 @@ import HeroSlider from "@/components/HeroSlider";
 import AboutSection from "@/components/AboutSection";
 import ContactSection from "@/components/ContactSection";
 import FeedbackSection from "@/components/FeedbackSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import ChatBot from "@/components/ChatBot"; 
 
 const Index = () => {
@@ -33,6 +34,7 @@ const Index = () => {
         <AboutSection />
         <ContactSection />
         <FeedbackSection />
+        <TestimonialsSection />
       </main>
       <Footer />
 
