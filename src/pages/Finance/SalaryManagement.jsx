@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrency } from "../../utils"; // Rs formatter
 
 // ---- CONFIG ----
-// Common Sri Lanka contributions
 const EPF_RATE = 0.08; // 8% employee (deducted from net)
 const ETF_RATE = 0.03; // 3% employer (usually NOT deducted from net)
 const INCLUDE_ETF_IN_NET = false; // set true if you still want ETF deducted from net
@@ -22,7 +22,7 @@ export default function SalaryManagement() {
   const [showForm, setShowForm] = useState(false);
 
   const [autoContrib, setAutoContrib] = useState(true);
-  const [users, setUsers] = useState([]); // staff list for dropdown
+  const [users, setUsers] = useState([]); // STAFF list for dropdown
 
   const [form, setForm] = useState({
     staffEmail: "",
@@ -42,8 +42,8 @@ export default function SalaryManagement() {
   // Load salary runs
   const getList = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/api/salaries`);
-      setItems(data);
+      const { data } = await axios.get(`${BASE_URL}/api/salaries`, { headers: { Accept: "application/json" } });
+      setItems(data || []);
     } catch {
       toast.error("Failed to fetch salaries");
     }
@@ -53,13 +53,22 @@ export default function SalaryManagement() {
     getList();
   }, []);
 
-  // Load users (no role filter). Hide admins in the dropdown.
+  // Load STAFF only (role === "staff")
   useEffect(() => {
     axios
-      .get(`${BASE_URL}/api/users`)
+      .get(`${BASE_URL}/api/users?role=staff`, { headers: { Accept: "application/json" } })
       .then(({ data }) => {
-        const list = (data || []).filter((u) => (u.role || "").toLowerCase() !== "admin");
-        setUsers(list);
+        const list = Array.isArray(data) ? data : [];
+        // Safety: enforce role check client-side too
+        const staffOnly = list.filter((u) => (u.role || "").toLowerCase() === "staff");
+        // Normalize & dedupe by email just in case
+        const byEmail = new Map();
+        staffOnly.forEach((u) => {
+          const email = (u.email || "").trim().toLowerCase();
+          if (!email) return;
+          if (!byEmail.has(email)) byEmail.set(email, u);
+        });
+        setUsers(Array.from(byEmail.values()));
       })
       .catch(() => setUsers([]));
   }, []);
@@ -95,6 +104,22 @@ export default function SalaryManagement() {
     return { daily, hourly, otW, otH, gross, net };
   }, [form]);
 
+  const resetForm = () =>
+    setForm({
+      staffEmail: "",
+      staffName: "",
+      periodStart: "",
+      periodEnd: "",
+      basicSalary: 0,
+      allowances: 0,
+      otHoursWeekday: 0,
+      otHoursHoliday: 0,
+      epf: 0,
+      etf: 0,
+      loan: 0,
+      tax: 0,
+    });
+
   const onSubmit = async () => {
     try {
       if (!form.staffEmail || !form.staffName || !form.periodStart || !form.periodEnd || !form.basicSalary) {
@@ -113,20 +138,7 @@ export default function SalaryManagement() {
       });
       toast.success("Salary run saved");
       setShowForm(false);
-      setForm({
-        staffEmail: "",
-        staffName: "",
-        periodStart: "",
-        periodEnd: "",
-        basicSalary: 0,
-        allowances: 0,
-        otHoursWeekday: 0,
-        otHoursHoliday: 0,
-        epf: 0,
-        etf: 0,
-        loan: 0,
-        tax: 0,
-      });
+      resetForm();
       getList();
     } catch (e) {
       toast.error(e?.response?.data?.error || "Operation failed");
@@ -149,9 +161,6 @@ export default function SalaryManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Salary Management</h1>
-          <p className="text-muted-foreground">
-            Create payroll, calculate daily/hourly salaries, and record deductions
-          </p>
         </div>
         <Button onClick={() => setShowForm((s) => !s)} className="bg-gradient-to-r from-primary to-black">
           <Plus className="w-4 h-4 mr-2" /> New Salary Run
@@ -174,24 +183,28 @@ export default function SalaryManagement() {
                 <Select
                   value={form.staffEmail}
                   onValueChange={(email) => {
-                    const u = users.find((x) => x.email === email);
-                    const name = u ? `${u.firstName} ${u.lastName}` : "";
+                    const u = users.find((x) => (x.email || "").toLowerCase() === email.toLowerCase());
+                    const name = u ? `${u.firstName || ""} ${u.lastName || ""}`.trim() : "";
                     setForm({ ...form, staffEmail: email, staffName: name });
                   }}
                 >
                   <SelectTrigger className="border-aqua/20">
-                    <SelectValue placeholder="Select staff" />
+                    <SelectValue placeholder={users.length ? "Select staff" : "No staff found"} />
                   </SelectTrigger>
                   <SelectContent>
                     {users.map((u) => (
-                      <SelectItem key={u.email} value={u.email}>
-                        {u.firstName} {u.lastName} — {u.email}
+                      <SelectItem key={u.email} value={(u.email || "").toLowerCase()}>
+                        {`${u.firstName || ""} ${u.lastName || ""}`.trim()} — {u.email}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <div className="text-xs text-muted-foreground">
-                  {form.staffName ? `Name: ${form.staffName}` : "Select a staff email to auto-fill name"}
+                  {form.staffName
+                    ? `Name: ${form.staffName}`
+                    : users.length
+                    ? "Select a staff email to auto-fill name"
+                    : "Ask admin to add staff users"}
                 </div>
               </div>
               <div className="space-y-2">
@@ -308,14 +321,14 @@ export default function SalaryManagement() {
 
             {/* Preview Calculations */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4">
-              <Stat label="Daily Salary" value={`$${calc.daily.toFixed(2)}`} />
-              <Stat label="Hourly Salary" value={`$${calc.hourly.toFixed(2)}`} />
-              <Stat label="OT Weekday Amt" value={`$${calc.otW.toFixed(2)}`} />
-              <Stat label="OT Holiday Amt" value={`$${calc.otH.toFixed(2)}`} />
-              <Stat label="Gross" value={`$${calc.gross.toFixed(2)}`} />
+              <Stat label="Daily Salary" value={formatCurrency(calc.daily)} />
+              <Stat label="Hourly Salary" value={formatCurrency(calc.hourly)} />
+              <Stat label="OT Weekday Amt" value={formatCurrency(calc.otW)} />
+              <Stat label="OT Holiday Amt" value={formatCurrency(calc.otH)} />
+              <Stat label="Gross" value={formatCurrency(calc.gross)} />
             </div>
             <div className="pt-2">
-              <Stat big label="Net Salary" value={`$${calc.net.toFixed(2)}`} />
+              <Stat big label="Net Salary" value={formatCurrency(calc.net)} />
             </div>
 
             <div className="flex gap-2">
@@ -333,39 +346,41 @@ export default function SalaryManagement() {
       {/* List */}
       <div className="space-y-3">
         <h2 className="text-xl font-semibold">Salary Runs</h2>
-        {items.map((it) => (
-          <Card key={it._id} className="border-aqua/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <div className="font-semibold">
-                  {it.staffName} ({it.staffEmail})
+        {items.map((it) => {
+          const otTotal = Number(it.otWeekdayAmt || 0) + Number(it.otHolidayAmt || 0);
+          return (
+            <Card key={it._id} className="border-aqua/10">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">
+                    {it.staffName} ({it.staffEmail})
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {new Date(it.periodStart).toLocaleDateString()} –{" "}
+                    {new Date(it.periodEnd).toLocaleDateString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Basic {formatCurrency(it.basicSalary)} • Allowances {formatCurrency(it.allowances)} • OT{" "}
+                    {formatCurrency(otTotal)}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(it.periodStart).toLocaleDateString()} –{" "}
-                  {new Date(it.periodEnd).toLocaleDateString()}
+                <div className="flex items-center gap-3">
+                  <div className="text-lg font-bold text-foreground">
+                    {formatCurrency(it.netSalary)}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="hover:bg-red-500/10 hover:text-red-500"
+                    onClick={() => onDelete(it._id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Basic ${Number(it.basicSalary).toFixed(2)} • Allowances $
-                  {Number(it.allowances).toFixed(2)} • OT $
-                  {Number((it.otWeekdayAmt || 0) + (it.otHolidayAmt || 0)).toFixed(2)}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-lg font-bold text-foreground">
-                  ${Number(it.netSalary).toFixed(2)}
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="hover:bg-red-500/10 hover:text-red-500"
-                  onClick={() => onDelete(it._id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
         {items.length === 0 && <div className="text-muted-foreground">No salary runs yet.</div>}
       </div>
     </div>

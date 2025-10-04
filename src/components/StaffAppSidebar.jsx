@@ -22,11 +22,11 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { 
-    title: "Stock Management", 
-    url: "/staffdashboard/stock", 
-    icon: Package,
-  },
+  // { 
+  //   title: "Stock Management", 
+  //   url: "/staffdashboard/stock", 
+  //   icon: Package,
+  // },
   { 
     title: "Salary & Benefits", 
     url: "/staffdashboard/salary", 
@@ -37,11 +37,11 @@ const menuItems = [
     url: "/staffdashboard/tasks", 
     icon: CheckSquare,
   },
-  { 
-    title: "Schedule", 
-    url: "/staffdashboard/schedule", 
-    icon: Calendar,
-  },
+  // { 
+  //   title: "Schedule", 
+  //   url: "/staffdashboard/schedule", 
+  //   icon: Calendar,
+  // },
   { 
     title: "Profile", 
     url: "/staffdashboard/profile", 

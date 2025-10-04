@@ -1,7 +1,10 @@
-// src/pages/Finance/FinanceManagement.jsx
-import { useEffect, useMemo, useState } from "react";
+// src/components/dashboard/FinanceManagement.jsx
+import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { exportFinancePDF } from "@/lib/exportFinancePDF";
+import { formatCurrency } from "../../utils";
+
 import {
   Card,
   CardContent,
@@ -36,18 +39,20 @@ import { Label } from "@/components/ui/label";
 const API_BASE = "http://localhost:5000/api";
 
 // --- helpers ---
-const currency = (n) => `$${Number(n || 0).toFixed(2)}`;
+const currency = (n) => formatCurrency(n);
 
-const downloadBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+// Normalize any backend string ("$900.00", "+$900", "900") to "+Rs …"/"-Rs …"
+const renderSignedAmount = (val) => {
+  const s = String(val ?? "").trim();
+  const isNeg = s.startsWith("-");
+  // pull numeric content
+  const num = typeof val === "number" ? Math.abs(val) : Math.abs(parseFloat(s.replace(/[^0-9.-]/g, ""))) || 0;
+  const out = formatCurrency(num);
+  return (isNeg ? "-" : "+") + out;
 };
+
+// Color green when positive, red when negative
+const amountColor = (val) => (String(val ?? "").trim().startsWith("-") ? "text-red-500" : "text-green-500");
 
 // --- main ---
 export default function FinanceManagement() {
@@ -63,7 +68,7 @@ export default function FinanceManagement() {
   const fetchOverview = async () => {
     try {
       setError(false);
-      const r = await fetch(`${API_BASE}/finance/overview`);
+      const r = await fetch(`${API_BASE}/finance/overview`, { cache: "no-store" });
       if (!r.ok) throw new Error("Failed to load overview");
       const j = await r.json();
       setData(j);
@@ -86,57 +91,19 @@ export default function FinanceManagement() {
       src.removeEventListener("finance", fetchOverview);
       src.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totals = data?.totals || {};
   const earnings = data?.earnings || [];
   const recent = data?.recent || [];
 
-  // ===== Export Report (CSV) =====
-  const onExport = () => {
+  // ===== Export Report (PDF) =====
+  const onExportPDF = async () => {
     try {
-      const lines = [];
-      lines.push(["Report Generated", new Date().toISOString()].join(","));
-      lines.push("");
-
-      // Totals
-      lines.push("Section,Value");
-      lines.push(["Available Balance", totals.availableBalance ?? 0].join(","));
-      lines.push(["This Month (Net)", totals.thisMonthNet ?? 0].join(","));
-      lines.push(["Total Earnings (Lifetime Income)", totals.lifetimeEarnings ?? 0].join(","));
-      lines.push(["Income (Payments + CR tx)", totals.income ?? 0].join(","));
-      lines.push(["Expense (DR tx)", totals.expense ?? 0].join(","));
-      lines.push(["Net", totals.net ?? 0].join(","));
-      lines.push("");
-
-      // Monthly earnings
-      lines.push("Monthly Earnings");
-      lines.push("Month,Amount,Growth(%)");
-      for (const m of earnings) {
-        lines.push([m.month, m.amount ?? 0, m.growth ?? 0].join(","));
-      }
-      lines.push("");
-
-      // Recent activity
-      lines.push("Recent Activity (last 10)");
-      lines.push("Source,Type,Description,Amount,Date,Status,Id");
-      for (const r of recent) {
-        lines.push([
-          r.source || "",
-          r.type || "",
-          (r.description || "").replace(/,/g, " "), // keep CSV tidy
-          r.amount || "",
-          r.date ? new Date(r.date).toISOString() : "",
-          r.status || "",
-          r.id || "",
-        ].join(","));
-      }
-
-      const csv = lines.join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      downloadBlob(blob, `finance-report-${new Date().toISOString().slice(0,10)}.csv`);
-      toast.success("Report exported");
-    } catch {
+      await exportFinancePDF();
+    } catch (e) {
+      console.error(e);
       toast.error("Export failed");
     }
   };
@@ -161,7 +128,7 @@ export default function FinanceManagement() {
       toast.success("Withdrawal recorded");
       setWithdrawOpen(false);
       setWithdrawAmt("");
-      // overview will auto-refresh via SSE
+      // overview auto-refreshes via SSE
     } catch (e) {
       toast.error(e?.response?.data?.error || "Failed to record withdrawal");
     }
@@ -179,7 +146,6 @@ export default function FinanceManagement() {
         return "bg-gray-500/10 text-gray-500";
     }
   };
-  const amountColor = (amt) => (String(amt).startsWith("+") ? "text-green-500" : "text-red-500");
 
   return (
     <div className="space-y-6">
@@ -191,11 +157,11 @@ export default function FinanceManagement() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={onExport}
+            onClick={onExportPDF}
             variant="outline"
             className="border-aqua/20 hover:bg-aqua/10"
             disabled={isLoading || isError || !data}
-            title="Export a CSV snapshot of the overview and recent activity"
+            title="Export a full PDF report: Transactions, Staff, Payments"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -359,7 +325,9 @@ export default function FinanceManagement() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className={`text-lg font-bold ${amountColor(row.amount)}`}>{row.amount}</div>
+                    <div className={`text-lg font-bold ${amountColor(row.amount)}`}>
+                      {renderSignedAmount(row.amount)}
+                    </div>
                     <p className="text-xs text-muted-foreground">{row.id}</p>
                   </div>
                 </div>

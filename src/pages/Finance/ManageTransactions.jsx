@@ -1,232 +1,294 @@
 // src/pages/Finance/ManageTransactions.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Pencil, Trash2, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/utils";
+
+const BASE_URL = "http://localhost:5000";
+
+const types = [
+  { value: "CR", label: "Credit (Income)" },
+  { value: "DR", label: "Debit (Expense)" },
+];
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+// --- VALIDATION HELPERS ---
+const toISODate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
+const isValidPositive = (n) => typeof n === "number" && !Number.isNaN(n) && n > 0;
+const isOnOrAfter = (a, b) => {
+  // a >= b (both "YYYY-MM-DD")
+  const da = new Date(a + "T00:00:00");
+  const db = new Date(b + "T00:00:00");
+  return da.getTime() >= db.getTime();
+};
 
 export default function ManageTransactions() {
   const [items, setItems] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [q, setQ] = useState("");
   const [editing, setEditing] = useState(null);
-  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
-    description: "",
     amount: 0,
     type: "CR",
-    date: new Date().toISOString().slice(0, 10),
+    date: todayISO(),        // Transaction Date (business date)
+    recordedAt: todayISO(),  // Updated Date (recorded on site)
+    description: "",
   });
 
-  const base = "http://localhost:5000";
-
-  const getList = async () => {
+  const load = async () => {
     try {
-      const { data } = await axios.get(`${base}/api/transactions`);
-      setItems(data);
-    } catch (e) {
-      toast.error(e?.response?.data?.error || "Failed to fetch transactions");
+      const { data } = await axios.get(`${BASE_URL}/api/transactions`);
+      setItems(Array.isArray(data) ? data : []);
+    } catch {
+      toast.error("Failed to load transactions");
     }
   };
 
   useEffect(() => {
-    getList();
+    load();
   }, []);
 
-  const onSubmit = async () => {
+  const filtered = useMemo(() => {
+    if (!q) return items;
+    const s = q.toLowerCase();
+    return items.filter(
+      (i) =>
+        i.name?.toLowerCase().includes(s) ||
+        i.description?.toLowerCase().includes(s)
+    );
+  }, [items, q]);
+
+  const reset = () =>
+    setForm({
+      name: "",
+      amount: 0,
+      type: "CR",
+      date: todayISO(),
+      recordedAt: todayISO(),
+      description: "",
+    });
+
+  const openNew = () => {
+    reset();
+    setEditing(null);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelForm = () => {
+    reset();
+    setEditing(null);
+    setShowForm(false);
+  };
+
+  // ---- VALIDATE BEFORE SUBMIT ----
+  const validate = () => {
+    const amt = Number(form.amount);
+    if (!isValidPositive(amt)) {
+      toast.error("Amount must be greater than 0.");
+      return false;
+    }
+    if (!form.date) {
+      toast.error("Please select a Transaction Date.");
+      return false;
+    }
+    if (!form.recordedAt) {
+      toast.error("Please select an Updated Date.");
+      return false;
+    }
+    if (!isOnOrAfter(form.recordedAt, form.date)) {
+      toast.error("Updated Date must be on or after the Transaction Date.");
+      return false;
+    }
+    // (Optional) require name
+    if (!String(form.name || "").trim()) {
+      toast.error("Please enter a Name for the transaction.");
+      return false;
+    }
+    return true;
+  };
+
+  const submit = async () => {
+    if (!validate()) return;
+
     try {
-      if (!form.name || !form.amount || !form.type) {
-        return toast.error("Fill all required fields");
-      }
-
-      // Validate amount
-      if (form.amount <= 0) {
-        return toast.error("Amount must be greater than 0");
-      }
-
-      // Validate description length
-      if (form.description && form.description.length > 100) {
-        return toast.error("Description cannot exceed 100 characters");
-      }
-
-      // Validate date (not in future)
-      const selectedDate = new Date(form.date);
-      const today = new Date();
-      today.setHours(23, 59, 59, 999); // End of today
-      if (selectedDate > today) {
-        return toast.error("Cannot select future dates");
-      }
-
       const payload = {
         ...form,
-        date: new Date(form.date),
         amount: Number(form.amount),
       };
-
       if (editing) {
-        await axios.patch(`${base}/api/transactions/${editing._id}`, payload);
+        await axios.patch(`${BASE_URL}/api/transactions/${editing}`, payload);
         toast.success("Transaction updated");
       } else {
-        await axios.post(`${base}/api/transactions`, payload);
+        await axios.post(`${BASE_URL}/api/transactions`, payload);
         toast.success("Transaction created");
       }
-
-      setShowForm(false);
+      reset();
       setEditing(null);
-      setForm({
-        name: "",
-        description: "",
-        amount: 0,
-        type: "CR",
-        date: new Date().toISOString().slice(0, 10),
-      });
-      getList();
+      setShowForm(false);
+      load();
     } catch (e) {
       toast.error(e?.response?.data?.error || "Operation failed");
     }
   };
 
-  const onEdit = (row) => {
-    setEditing(row);
+  const onEdit = (item) => {
+    setEditing(item._id);
     setForm({
-      name: row.name,
-      description: row.description || "",
-      amount: row.amount,
-      type: row.type,
-      date: (row.date ? new Date(row.date) : new Date()).toISOString().slice(0, 10),
+      name: item.name || "",
+      amount: item.amount ?? 0,
+      type: item.type || "CR",
+      date: item.date ? toISODate(item.date) : todayISO(),
+      recordedAt: item.recordedAt ? toISODate(item.recordedAt) : todayISO(),
+      description: item.description || "",
     });
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const onDelete = async (id) => {
     if (!confirm("Delete this transaction?")) return;
     try {
-      await axios.delete(`${base}/api/transactions/${id}`);
+      await axios.delete(`${BASE_URL}/api/transactions/${id}`);
       toast.success("Deleted");
-      getList();
-    } catch (e) {
-      toast.error(e?.response?.data?.error || "Delete failed");
+      load();
+    } catch {
+      toast.error("Delete failed");
     }
   };
 
-  const filtered = items.filter(
-    (i) =>
-      (i.name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (i.description || "").toLowerCase().includes(search.toLowerCase())
-  );
+  // Keep Updated Date >= Transaction Date by adjusting min attribute and auto-correcting if needed
+  useEffect(() => {
+    if (!isOnOrAfter(form.recordedAt, form.date)) {
+      setForm((prev) => ({ ...prev, recordedAt: prev.date }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.date]);
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Manage Transactions</h1>
           <p className="text-muted-foreground">Create, edit, and delete financial records</p>
         </div>
-        <Button
-          onClick={() => {
-            setShowForm((s) => !s);
-            setEditing(null);
-          }}
-          className="bg-gradient-to-r from-primary to-black"
-        >
+        <Button onClick={openNew} className="bg-gradient-to-r from-primary to-black">
           <Plus className="w-4 h-4 mr-2" /> New Transaction
         </Button>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Search */}
+      <div className="max-w-xl">
         <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 border-aqua/20"
           placeholder="Search transactions..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="border-aqua/20"
         />
       </div>
 
+      {/* Form */}
       {showForm && (
         <Card className="border-aqua/20">
           <CardHeader>
             <CardTitle>{editing ? "Edit Transaction" : "Add Transaction"}</CardTitle>
-            <CardDescription>
-              {editing ? "Update the financial entry" : "Create a new financial entry"}
-            </CardDescription>
+            <p className="text-sm text-muted-foreground">Create a new financial entry</p>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Row 1: Name / Amount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label>Name</Label>
                 <Input
-                  id="name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Name"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (Rs.)</Label>
+                <Label>Amount (Rs)</Label>
                 <Input
-                  id="amount"
                   type="number"
-                  min="0"
+                  min="0.01"
                   step="0.01"
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  placeholder="0.00"
+                  onWheel={(e) => e.currentTarget.blur()} // avoid accidental scroll changes
                 />
               </div>
             </div>
 
+            {/* Row 2: Type / Transaction Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <Select
+                  value={form.type}
+                  onValueChange={(v) => setForm({ ...form, type: v })}
+                >
                   <SelectTrigger className="border-aqua/20">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CR">Credit (Income)</SelectItem>
-                    <SelectItem value="DR">Debit (Expense)</SelectItem>
+                    {types.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
+                <Label>Transaction Date</Label>
                 <Input
-                  id="date"
                   type="date"
-                  max={new Date().toISOString().slice(0, 10)}
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                 />
               </div>
             </div>
 
+            {/* Row 3: Updated Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Updated Date</Label>
+                <Input
+                  type="date"
+                  min={form.date} // cannot be before Transaction Date
+                  value={form.recordedAt}
+                  onChange={(e) => setForm({ ...form, recordedAt: e.target.value })}
+                />
+              </div>
+              <div className="hidden md:block" />
+            </div>
+
+            {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label>Description</Label>
               <Input
-                id="description"
+                placeholder="Enter description (max 100 characters)"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 maxLength={100}
-                placeholder="Enter description (max 100 characters)"
               />
-              {form.description && (
-                <p className="text-xs text-muted-foreground">
-                  {form.description.length}/100 characters
-                </p>
-              )}
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={onSubmit} className="bg-gradient-to-r from-primary to-black">
+              <Button onClick={submit} className="bg-gradient-to-r from-primary to-black">
                 {editing ? "Update" : "Create"}
               </Button>
-              <Button variant="outline" onClick={() => setShowForm(false)}>
+              <Button variant="outline" onClick={cancelForm}>
                 Cancel
               </Button>
             </div>
@@ -234,46 +296,39 @@ export default function ManageTransactions() {
         </Card>
       )}
 
+      {/* List */}
       <div className="space-y-3">
         <h2 className="text-xl font-semibold">Transactions</h2>
-        {filtered.map((row) => (
-          <Card key={row._id} className="border-aqua/10">
+        {filtered.map((it) => (
+          <Card key={it._id} className="border-aqua/10">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{row.name}</span>
-                  <Badge
-                    className={
-                      row.type === "CR"
-                        ? "bg-green-500/10 text-green-600"
-                        : "bg-red-500/10 text-red-600"
-                    }
-                  >
-                    {row.type}
+                <div className="font-semibold">
+                  {it.name}{" "}
+                  <Badge variant="outline" className={it.type === "CR" ? "text-green-600" : "text-red-600"}>
+                    {it.type}
                   </Badge>
                 </div>
-                <div className="text-sm text-muted-foreground">{row.description}</div>
+                <div className="text-sm text-muted-foreground">
+                  {it.description || "—"}
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  {row.date ? new Date(row.date).toLocaleDateString() : ""}
+                  {it.date ? `Transaction: ${new Date(it.date).toLocaleDateString()}` : ""}
+                  {it.recordedAt ? ` • Updated: ${new Date(it.recordedAt).toLocaleDateString()}` : ""}
                 </div>
               </div>
-
               <div className="flex items-center gap-3">
-                <div
-                  className={`text-lg font-bold ${
-                    row.type === "CR" ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {row.type === "CR" ? "+" : "-"}Rs. {Number(row.amount || 0).toFixed(2)}
+                <div className={`text-lg font-bold ${it.type === "CR" ? "text-green-600" : "text-red-600"}`}>
+                  {`${it.type === "CR" ? "" : "-"}${formatCurrency(Number(it.amount || 0))}`}
                 </div>
-                <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-                  <Edit className="w-4 h-4" />
+                <Button size="sm" variant="outline" onClick={() => onEdit(it)}>
+                  <Pencil className="w-4 h-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   className="hover:bg-red-500/10 hover:text-red-500"
-                  onClick={() => onDelete(row._id)}
+                  onClick={() => onDelete(it._id)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -281,9 +336,7 @@ export default function ManageTransactions() {
             </CardContent>
           </Card>
         ))}
-        {filtered.length === 0 && (
-          <div className="text-muted-foreground">No transactions found.</div>
-        )}
+        {filtered.length === 0 && <div className="text-muted-foreground">No transactions yet.</div>}
       </div>
     </div>
   );
