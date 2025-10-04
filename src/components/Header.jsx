@@ -132,6 +132,22 @@ const Header = () => {
                     {user?.firstName ? `${user.firstName}'s Dashboard` : getRoleDisplayName(role)}
                   </Link>
                 </Button>
+                {/* <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-foreground">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {role || 'User'}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={getDashboardPath(role)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                </div> */}
                 <Button variant="destructive" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>
