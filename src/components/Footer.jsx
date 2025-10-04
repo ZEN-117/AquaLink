@@ -78,6 +78,14 @@ const Footer = () => {
                   Contact Us
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => handleScroll("feedback")}
+                  className="font-semibold text-lg text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Feedback
+                </button>
+              </li>
             </ul>
           </div>
 

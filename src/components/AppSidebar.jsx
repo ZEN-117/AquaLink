@@ -18,8 +18,9 @@ import {
   ShoppingBag,
   HouseIcon,
   Fish,
-  ChevronDown, // 👉 Added for finance dropdown arrow
-  Warehouse
+  ChevronDown,
+  Warehouse,
+  MessageSquare
 } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react"; // 👉 Needed for finance expand/collapse logic
@@ -45,6 +46,11 @@ const menuItems = [
     title: "Inventory", 
     url: "/dashboard/inventory", 
     icon: Warehouse,
+  },
+  { 
+    title: "Feedback Management", 
+    url: "/dashboard/feedback", 
+    icon: MessageSquare,
   },
   { 
     title: "Profile", 
