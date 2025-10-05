@@ -60,7 +60,7 @@ const getStatus = (r) => r[pick(r, ["status", "state"])];
 const getDesc = (r) => r[pick(r, ["description", "desc", "note", "title", "narration"])];
 const getAmount = (r) => r[pick(r, ["amount", "total", "value", "paid"])];
 
-// Classification for recent[]
+// Classification for recent[] groups
 function isWithdrawal(r) {
   const t = (getType(r) || "").toLowerCase();
   const d = (getDesc(r) || "").toLowerCase();
@@ -88,7 +88,7 @@ function isExpense(r) {
 
 /* ==========================================================
    Finance Report (Owner)
-   Renders: Overview → Monthly → Transactions (3 sections)
+   Renders: Overview → Monthly → Transactions (Expenses, Income, Withdrawals)
             → Salary (landscape, multi-page)
    ========================================================== */
 export function exportFinancePDF({
@@ -142,7 +142,7 @@ export function exportFinancePDF({
     y = doc.lastAutoTable.finalY + 18;
   }
 
-  // ---------- Monthly Earnings (no %) ----------
+  // ---------- Monthly Earnings ----------
   if (hasRows(earnings)) {
     const rows = earnings.map((m, i, arr) => {
       const amt = Number(m.amount || 0);
@@ -165,21 +165,20 @@ export function exportFinancePDF({
     y = doc.lastAutoTable.finalY + 18;
   }
 
-  // ---------- Transactions (3 sections) ----------
+  // ---------- Transactions ----------
   const salaryRows = recent.filter(isSalary);
   const withdrawalRows = recent.filter(isWithdrawal);
   const incomeRows = recent.filter((r) => !isWithdrawal(r) && isIncome(r));
   const expenseRows = recent.filter(isExpense);
 
-  // Allocate enough width for Description so it wraps correctly
   const transColumnStyles = {
-    0: { cellWidth: 34, halign: "right" }, // #
-    1: { cellWidth: 74 },                  // Txn Date
-    2: { cellWidth: 84 },                  // Updated
-    3: { cellWidth: 60 },                  // Type
-    4: { cellWidth: 74 },                  // Status
-    5: { cellWidth: "auto" },              // Description (flex & wrap)
-    6: { cellWidth: 90, halign: "right" }, // Amount
+    0: { cellWidth: 34, halign: "right" },
+    1: { cellWidth: 74 },
+    2: { cellWidth: 84 },
+    3: { cellWidth: 60 },
+    4: { cellWidth: 74 },
+    5: { cellWidth: "auto" },
+    6: { cellWidth: 90, halign: "right" },
   };
 
   const renderSection = ({ title, rows }) => {
@@ -214,7 +213,7 @@ export function exportFinancePDF({
 
     y = doc.lastAutoTable.finalY + 18;
 
-    // Subtotal for the section
+    // Subtotal for this section
     const total = rows.reduce((s, r) => s + parseAmountAbs(getAmount(r)), 0);
     autoTable(doc, {
       startY: y,
@@ -234,7 +233,7 @@ export function exportFinancePDF({
   renderSection({ title: "Payments Received", rows: incomeRows });
   renderSection({ title: "Withdrawals", rows: withdrawalRows });
 
-  // ---------- Salary Payments (landscape, multi-page) ----------
+  // ---------- Salary Payments (landscape) ----------
   if (hasRows(salaryRecords)) {
     doc.addPage("a4", "landscape");
 
@@ -312,7 +311,6 @@ export function exportFinancePDF({
       styles: { fontSize: 9, cellPadding: 5, valign: "top" },
       headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [248, 250, 253] },
-      // widths are reasonable by default; leave description-like fields to flex
     });
   }
 
@@ -320,7 +318,7 @@ export function exportFinancePDF({
 }
 
 /* ==========================================================
-   Staff Salary History (single staff) — unchanged external API
+   Staff Salary History (single staff)
    ========================================================== */
 export function exportStaffSalaryTable({
   staffName = "",
@@ -345,13 +343,11 @@ export function exportStaffSalaryTable({
 
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-  // Header
   doc.setFontSize(16);
   doc.text("Salary History", 40, 40);
   doc.setFontSize(10);
   doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 58);
 
-  // Staff block
   autoTable(doc, {
     startY: 80,
     margin: { left: 40, right: 40 },

@@ -1,5 +1,5 @@
 // src/components/dashboard/FinanceManagement.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { exportFinancePDF } from "@/lib/exportFinancePDF";
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-  import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   DollarSign,
   TrendingUp,
@@ -22,6 +22,7 @@ import {
   Download,
   CreditCard,
   Wallet,
+  RefreshCw,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,13 +40,12 @@ import { Label } from "@/components/ui/label";
 const API_BASE = "http://localhost:5000/api";
 const OVERVIEW_URL = `${API_BASE}/finance/overview`;
 const EVENTS_URL = `${API_BASE}/finance/events`;
-// Owner-level salaries endpoint (all staff). Adjust if your API differs.
 const SALARIES_URL = `${API_BASE}/salaries`;
 
-// --- helpers ---
+// ---------- helpers ----------
 const currency = (n) => formatCurrency(Number(n) || 0);
 
-// Normalize any backend string/number to a signed Rs format for the UI feed
+// signed formatting for UI feed
 const renderSignedAmount = (val) => {
   const s = String(val ?? "").trim();
   const isNeg = s.startsWith("-");
@@ -56,37 +56,129 @@ const renderSignedAmount = (val) => {
   const out = formatCurrency(num);
   return (isNeg ? "-" : "+") + out;
 };
-
-// Color green when positive, red when negative (UI only)
 const amountColor = (val) =>
   String(val ?? "").trim().startsWith("-") ? "text-red-500" : "text-green-500";
 
+// Month utilities
+function ymKey(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+function ymLabel(ym) {
+  if (!ym) return "Current period";
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, (m || 1) - 1, 1);
+  return d.toLocaleString(undefined, { month: "long", year: "numeric" });
+}
+function lastNMonths(n = 18) {
+  const out = [];
+  const now = new Date();
+  for (let i = 0; i < n; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push({
+      key: ymKey(d),
+      label: d.toLocaleString(undefined, { month: "long", year: "numeric" }),
+    });
+  }
+  return out;
+}
+
+// ---------- date picking helpers that mirror exportFinancePDF ----------
+const pick = (o, keys) => keys.find((k) => o && o[k] != null);
+const getTxnDateAny = (r) =>
+  r[
+    pick(r, [
+      "date",
+      "createdAt",
+      "txDate",
+      "paidAt",
+      "timestamp",
+      "transactionDate",
+    ])
+  ];
+const getUpdatedAny = (r) =>
+  r[
+    pick(r, [
+      "updatedAt",
+      "updated",
+      "dateUpdated",
+      "lastUpdated",
+      "modifiedAt",
+      "lastModified",
+      "updated_on",
+      "updatedOn",
+      "modified_on",
+      "modifiedOn",
+    ])
+  ];
+
+// does a JS Date belong to YYYY-MM?
+function isInYM(dateLike, ym) {
+  if (!ym) return true;
+  if (!dateLike) return false;
+  const d = new Date(dateLike);
+  if (Number.isNaN(d.getTime())) return false;
+  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return key === ym;
+}
+
+// does a [start,end] date range overlap a given YYYY-MM month window?
+function rangeOverlapsYM(start, end, ym) {
+  if (!ym) return true;
+  const [y, m] = ym.split("-").map(Number);
+  const monthStart = new Date(y, m - 1, 1);
+  const monthEnd = new Date(y, m, 0, 23, 59, 59, 999); // end of month
+
+  const s = start ? new Date(start) : null;
+  const e = end ? new Date(end) : null;
+
+  // If no range info, treat as not overlapping to be safe.
+  if (!s && !e) return false;
+  const rs = s || e; // if only one provided, reuse it
+  const re = e || s;
+
+  // overlap test
+  return rs <= monthEnd && re >= monthStart;
+}
+
 export default function FinanceManagement() {
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const monthOptions = useMemo(() => lastNMonths(18), []);
+
   const [data, setData] = useState(null);
-  const [salaryRecords, setSalaryRecords] = useState([]); // <— detailed salary rows for PDF
+  const [salaryRecords, setSalaryRecords] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [isError, setError] = useState(false);
 
-  // Withdraw modal state
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmt, setWithdrawAmt] = useState("");
 
-  // fetch overview + salaries concurrently
+  const sseRef = useRef(null);
+
+  const overviewUrl = useMemo(() => {
+    if (!selectedMonth) return OVERVIEW_URL;
+    return `${OVERVIEW_URL}?month=${encodeURIComponent(selectedMonth)}`;
+  }, [selectedMonth]);
+
+  const salariesParams = useMemo(() => {
+    const params = { limit: 1000 };
+    if (selectedMonth) params.month = selectedMonth;
+    return params;
+  }, [selectedMonth]);
+
   const fetchAll = async () => {
     try {
       setError(false);
       setLoading(true);
 
       const [overviewRes, salariesRes] = await Promise.allSettled([
-        fetch(OVERVIEW_URL, { cache: "no-store" }).then((r) => {
+        fetch(overviewUrl, { cache: "no-store" }).then((r) => {
           if (!r.ok) throw new Error("Failed to load overview");
           return r.json();
         }),
         axios
-          .get(SALARIES_URL, {
-            // If your API supports paging/date filters, add params here
-            params: { limit: 500 }, // keep reasonable
-          })
+          .get(SALARIES_URL, { params: salariesParams })
           .then((r) => (Array.isArray(r.data) ? r.data : [])),
       ]);
 
@@ -99,7 +191,6 @@ export default function FinanceManagement() {
       if (salariesRes.status === "fulfilled") {
         setSalaryRecords(salariesRes.value || []);
       } else {
-        // not fatal for the page; PDF will still work with recent[]
         setSalaryRecords([]);
         console.warn("Salaries load skipped:", salariesRes.reason);
       }
@@ -112,40 +203,76 @@ export default function FinanceManagement() {
     }
   };
 
-  // initial + live updates via SSE for overview; salaries can be refetched ad-hoc if needed
   useEffect(() => {
     fetchAll();
+  }, [overviewUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SSE only for current period
+  useEffect(() => {
+    if (selectedMonth !== "") {
+      if (sseRef.current) {
+        try {
+          sseRef.current.close();
+        } catch {}
+        sseRef.current = null;
+      }
+      return;
+    }
     const src = new EventSource(EVENTS_URL);
+    sseRef.current = src;
     const onFinance = () => {
-      // Refresh just the overview quickly; keep salaries as last fetched
       fetch(OVERVIEW_URL, { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((j) => setData(j))
-        .catch(() => {/* ignore to keep UI stable */});
+        .catch(() => {});
     };
     src.addEventListener("finance", onFinance);
-    src.onerror = () => src.close();
+    src.onerror = () => {
+      try {
+        src.close();
+      } catch {}
+      sseRef.current = null;
+    };
     return () => {
       src.removeEventListener("finance", onFinance);
-      src.close();
+      try {
+        src.close();
+      } catch {}
+      sseRef.current = null;
     };
-  }, []);
+  }, [selectedMonth]);
 
   const totals = data?.totals || {};
   const earnings = data?.earnings || [];
   const recent = data?.recent || [];
 
-  // ===== Export Report (PDF) =====
+  // -------- Export (with client-side month filtering fallback) --------
   const onExportPDF = async () => {
     try {
+      // Filter transactions to selected month if one is chosen
+      const recentForMonth =
+        selectedMonth === ""
+          ? recent
+          : recent.filter((r) => {
+              const d = getTxnDateAny(r) || getUpdatedAny(r);
+              return isInYM(d, selectedMonth);
+            });
+
+      // Filter salary records whose (periodStart, periodEnd) overlaps the month
+      const salariesForMonth =
+        selectedMonth === ""
+          ? salaryRecords
+          : salaryRecords.filter((r) =>
+              rangeOverlapsYM(r.periodStart, r.periodEnd, selectedMonth)
+            );
+
       await exportFinancePDF({
         generatedAt: new Date(),
-        periodLabel: "Current period", // or compute from your filters
+        periodLabel: ymLabel(selectedMonth),
         totals,
-        earnings,
-        recent,
-        // include the detailed salary docs so the PDF prints the full landscape salary table
-        salaryRecords,
+        earnings, // keep as-is; these usually are already aggregated by month
+        recent: recentForMonth,
+        salaryRecords: salariesForMonth,
       });
     } catch (e) {
       console.error(e);
@@ -153,7 +280,7 @@ export default function FinanceManagement() {
     }
   };
 
-  // ===== Withdraw Funds (creates a DR transaction) =====
+  // Withdraw
   const onWithdraw = async () => {
     const amount = Number(withdrawAmt);
     if (!amount || amount <= 0) {
@@ -173,7 +300,7 @@ export default function FinanceManagement() {
       toast.success("Withdrawal recorded");
       setWithdrawOpen(false);
       setWithdrawAmt("");
-      // overview auto-refreshes via SSE
+      if (selectedMonth) fetchAll(); // manual refresh when viewing past month
     } catch (e) {
       toast.error(e?.response?.data?.error || "Failed to record withdrawal");
     }
@@ -195,20 +322,49 @@ export default function FinanceManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Finance Management</h1>
           <p className="text-muted-foreground">
             Track your earnings, payments, and financial analytics
           </p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Month Picker */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">Month</label>
+            <select
+              className="border rounded-md px-2 py-1 text-sm"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              title="Pick a month to view/export"
+            >
+              <option value="">Current period</option>
+              {monthOptions.map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={fetchAll}
+              title="Refresh data"
+              disabled={isLoading}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+
           <Button
             onClick={onExportPDF}
             variant="outline"
             className="border-aqua/20 hover:bg-aqua/10"
             disabled={isLoading || isError || !data}
-            title="Export a full PDF report (overview, transactions, withdrawals, payments, and detailed salary runs)"
+            title={`Export PDF for ${ymLabel(selectedMonth)}`}
           >
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -278,13 +434,17 @@ export default function FinanceManagement() {
               <div className="text-2xl font-bold text-foreground">
                 {currency(totals.availableBalance)}
               </div>
-              <p className="text-xs text-muted-foreground">Ready for withdrawal</p>
+              <p className="text-xs text-muted-foreground">
+                {selectedMonth ? "Snapshot for selected month" : "Ready for withdrawal"}
+              </p>
             </CardContent>
           </Card>
 
           <Card className="animate-fade-in border-aqua/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month (Net)</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {selectedMonth ? `${ymLabel(selectedMonth)} (Net)` : "This Month (Net)"}
+              </CardTitle>
               <div className="p-2 rounded-lg bg-green-500/10">
                 <TrendingUp className="w-4 h-4 text-green-500" />
               </div>
@@ -293,7 +453,9 @@ export default function FinanceManagement() {
               <div className="text-2xl font-bold text-foreground">
                 {currency(totals.thisMonthNet)}
               </div>
-              <p className="text-xs text-green-500">Auto-updates as you record items</p>
+              <p className="text-xs text-green-500">
+                {selectedMonth ? "Filtered view" : "Auto-updates as you record items"}
+              </p>
             </CardContent>
           </Card>
 
@@ -316,12 +478,16 @@ export default function FinanceManagement() {
         </div>
       )}
 
-      {/* Monthly Earnings (UI keeps % for now) */}
+      {/* Monthly Earnings */}
       {!isLoading && !isError && (
         <Card className="animate-fade-in border-aqua/10">
           <CardHeader>
             <CardTitle>Monthly Earnings</CardTitle>
-            <CardDescription>Your net performance over the last 4 months</CardDescription>
+            <CardDescription>
+              {selectedMonth
+                ? `Context: ${ymLabel(selectedMonth)}`
+                : "Your net performance over the last 4 months"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -343,7 +509,7 @@ export default function FinanceManagement() {
                       {currency(m.amount)}
                     </div>
                     <div
-                      className={`flex items-center gap-1 text-sm ${
+                      className={`flex items='center gap-1 text-sm ${
                         m.growth >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
@@ -367,7 +533,11 @@ export default function FinanceManagement() {
         <Card className="animate-fade-in border-aqua/10">
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>
-            <CardDescription>Recent payments, sales, and withdrawals</CardDescription>
+            <CardDescription>
+              {selectedMonth
+                ? `Showing ${ymLabel(selectedMonth)}`
+                : "Recent payments, sales, and withdrawals"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -396,7 +566,7 @@ export default function FinanceManagement() {
                 </div>
               ))}
               {recent.length === 0 && (
-                <div className="text-muted-foreground">No recent activity.</div>
+                <div className="text-muted-foreground">No activity for this period.</div>
               )}
             </div>
           </CardContent>
