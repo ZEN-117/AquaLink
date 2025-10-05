@@ -1,172 +1,173 @@
 // src/lib/exportFinancePDF.js
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // call as a function we import
-import { formatCurrency } from "../utils";
+import autoTable from "jspdf-autotable";
 
-// Point straight at your backend in dev. If you add a Vite proxy, switch to "/api".
-const API_BASE = "http://localhost:5000/api";
-
-// 0001-style padding
-const pad = (n, width = 4) => String(n).padStart(width, "0");
-
-// Strict JSON fetch that bypasses cache and rejects HTML responses
-async function getJson(url) {
-  const res = await fetch(url, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-
-  // If any proxy returns 304 or non-OK, retry with a cache-buster
-  if (res.status === 304 || !res.ok) {
-    const sep = url.includes("?") ? "&" : "?";
-    const retry = await fetch(`${url}${sep}ts=${Date.now()}`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-    if (!retry.ok) {
-      const txt = await retry.text().catch(() => "");
-      throw new Error(`Failed to load ${url} (${retry.status}). First bytes: ${txt.slice(0, 80)}`);
-    }
-    const ct2 = retry.headers.get("content-type") || "";
-    if (!ct2.includes("application/json")) {
-      const txt = await retry.text().catch(() => "");
-      throw new Error(`Expected JSON from ${url}. Got ${ct2}. First bytes: ${txt.slice(0, 80)}`);
-    }
-    return retry.json();
-  }
-
-  const ct = res.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`Expected JSON from ${url}. Got ${ct}. First bytes: ${txt.slice(0, 80)}`);
-  }
-
-  return res.json();
+/** Simple currency helper (Rs with thousand separators) */
+function formatCurrency(n) {
+  const num = Number(n || 0);
+  return `Rs ${num.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
+/** Owner dashboard full report (kept for compatibility) */
 export async function exportFinancePDF() {
-  // 1) Fresh data
-  const [txs, users, pays] = await Promise.all([
-    getJson(`${API_BASE}/transactions`),
-    getJson(`${API_BASE}/users`),
-    getJson(`${API_BASE}/buyer/payments`),
-  ]);
-
-  const usersById = new Map((users || []).map((u) => [u._id, u]));
-
-  // 2) Rows
-  const txRows = (txs || [])
-    .sort(
-      (a, b) =>
-        new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0)
-    )
-    .map((t, i) => {
-      const staffUser = usersById.get?.(t.staffId);
-      const staffName = staffUser
-        ? `${staffUser.firstName || ""} ${staffUser.lastName || ""}`.trim()
-        : t.staffId || "";
-      return [
-        pad(i + 1),
-        t.name || t.title || "",
-        (t.type || "").toUpperCase(),
-        formatCurrency(t.amount),
-        t.date
-          ? new Date(t.date).toLocaleDateString()
-          : t.createdAt
-          ? new Date(t.createdAt).toLocaleDateString()
-          : "",
-        (t.description || "").replace(/\s+/g, " ").trim(),
-        t.orderId || "",
-        staffName,
-      ];
-    });
-
-  const staffRows = (users || [])
-    .filter((u) => (u.role || "").toLowerCase() !== "admin")
-    .map((u, i) => [
-      pad(i + 1, 3),
-      `${u.firstName || ""} ${u.lastName || ""}`.trim(),
-      u.email || "",
-      u.phone || "",
-      u.role || "",
-      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "",
-    ]);
-
-  const payRows = (pays || [])
-    .sort(
-      (a, b) =>
-        new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0)
-    )
-    .map((p, i) => [
-      "P" + pad(i + 1),
-      p.orderId || "",
-      p.buyerId || "",
-      formatCurrency(p.amount), // <-- fixed: use p.amount (not t.amount)
-      (p.method || "").toUpperCase(),
-      p.date
-        ? new Date(p.date).toLocaleDateString()
-        : p.createdAt
-        ? new Date(p.createdAt).toLocaleDateString()
-        : "",
-      (p.description || "").replace(/\s+/g, " ").trim(),
-    ]);
-
-  // 3) PDF
   const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const title = "Finance Report";
-  const generatedOn = new Date().toLocaleString();
-
   doc.setFontSize(16);
-  doc.text(title, 40, 40);
+  doc.text("Finance Report", 40, 40);
   doc.setFontSize(10);
-  doc.text(`Generated: ${generatedOn}`, 40, 58);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 58);
 
-  // Transactions (Page 1)
-  let y = 80;
-  doc.setFontSize(12);
-  doc.text("Transactions", 40, y);
-  y += 10;
   autoTable(doc, {
-    startY: y,
-    head: [["Txn #", "Name", "Type", "Amount", "Date", "Description", "Order ID", "Staff"]],
-    body: txRows,
-    styles: { fontSize: 9, cellPadding: 3, overflow: "linebreak" },
-    columnStyles: { 5: { cellWidth: 160 } },
-    didDrawPage: (data) => {
-      const str = `Page ${doc.getNumberOfPages()}`;
-      doc.setFontSize(10);
-      const pageH = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-      doc.text(str, data.settings.margin.left, pageH - 10);
+    startY: 80,
+    head: [["Section", "Status"]],
+    body: [["Transactions & Payments", "See in-app lists"]],
+    styles: { fontSize: 10, cellPadding: 8 },
+    headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
+    theme: "grid",
+  });
+
+  doc.save(`finance-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+/**
+ * Staff “Download All” – table of a single staff member’s salary records
+ * Renders in A4 LANDSCAPE so all columns fit neatly.
+ * @param {{staffName:string, staffEmail:string, records:Array}} opts
+ */
+export function exportStaffSalaryTable({ staffName = "", staffEmail = "", records = [] }) {
+  // 👉 Landscape to fit all columns
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Header
+  doc.setFontSize(16);
+  doc.text("Salary History", 40, 40);
+  doc.setFontSize(10);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 40, 58);
+
+  // Staff block
+  autoTable(doc, {
+    startY: 80,
+    margin: { left: 40, right: 40 },
+    head: [["Field", "Value"]],
+    body: [
+      ["Employee", staffName || "-"],
+      ["Email", staffEmail || "-"],
+    ],
+    styles: { fontSize: 10, cellPadding: 6 },
+    headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
+    columnStyles: { 0: { cellWidth: 120, fontStyle: "bold" }, 1: { cellWidth: "auto" } },
+    theme: "grid",
+    alternateRowStyles: { fillColor: [248, 250, 253] },
+  });
+
+  // Empty state
+  if (!Array.isArray(records) || records.length === 0) {
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 16,
+      margin: { left: 40, right: 40 },
+      head: [["Info"]],
+      body: [["No salary records available."]],
+      styles: { fontSize: 10, cellPadding: 6 },
+      headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
+      theme: "grid",
+    });
+    doc.save(`salary-history-${new Date().toISOString().slice(0, 10)}.pdf`);
+    return;
+  }
+
+  // Build rows
+  const rows = records.map((r, idx) => {
+    const periodDate = r.periodStart ? new Date(r.periodStart) : null;
+    const period =
+      periodDate?.toLocaleString(undefined, { month: "long", year: "numeric" }) || "-";
+
+    const otHours =
+      (Number(r.otHoursWeekday || 0) + Number(r.otHoursHoliday || 0)) || 0;
+
+    const gross =
+      Number(r.basicSalary || 0) +
+      Number(r.allowances || 0) +
+      Number(r.otWeekdayAmt || 0) +
+      Number(r.otHolidayAmt || 0);
+
+    return [
+      String(idx + 1).padStart(3, "0"),
+      period,
+      formatCurrency(gross),
+      formatCurrency(r.netSalary),
+      `${otHours}h`,
+      formatCurrency(r.epf || 0),
+      formatCurrency(r.etf || 0),
+      formatCurrency(r.loan || 0),
+      formatCurrency(r.tax || 0),
+      r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "",
+    ];
+  });
+
+  // Column widths tuned to fit within landscape page with 40pt margins on each side
+  // Total ≈ 36 + 120 + 90 + 100 + 50 + 70 + 70 + 70 + 70 + 80 = 756
+  // A4 landscape width ≈ 842pt; 842 - 80 margins = 762pt => fits safely.
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 18,
+    margin: { left: 40, right: 40 },
+    head: [
+      [
+        "No.",
+        "Period",
+        "Gross Pay",
+        "Net Pay",
+        "OT",
+        "EPF",
+        "ETF",
+        "Loan",
+        "Tax",
+        "Created",
+      ],
+    ],
+    body: rows,
+    styles: { fontSize: 9, cellPadding: 6 },
+    headStyles: {
+      fillColor: [24, 64, 228],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    theme: "grid",
+    alternateRowStyles: { fillColor: [248, 250, 253] },
+    columnStyles: {
+      0: { cellWidth: 36, halign: "right" },  // No.
+      1: { cellWidth: 120 },                 // Period
+      2: { cellWidth: 90, halign: "right" }, // Gross
+      3: { cellWidth: 100, halign: "right", fontStyle: "bold" }, // Net
+      4: { cellWidth: 50, halign: "right" }, // OT
+      5: { cellWidth: 70, halign: "right" }, // EPF
+      6: { cellWidth: 70, halign: "right" }, // ETF
+      7: { cellWidth: 70, halign: "right" }, // Loan
+      8: { cellWidth: 70, halign: "right" }, // Tax
+      9: { cellWidth: 80 },                  // Created
+    },
+    // Let long tables naturally flow across pages in landscape
+    tableWidth: "auto",
+    didParseCell: (data) => {
+      // Make “Net Pay” bold
+      if (data.section === "body" && data.column.index === 3) {
+        data.cell.styles.fontStyle = "bold";
+      }
     },
   });
 
-  // Staff (Page 2)
-  doc.addPage();
-  y = 40;
-  doc.setFontSize(12);
-  doc.text("Staff", 40, y);
-  y += 10;
-  autoTable(doc, {
-    startY: y,
-    head: [["#", "Name", "Email", "Phone", "Role", "Created"]],
-    body: staffRows,
-    styles: { fontSize: 9, cellPadding: 3 },
-  });
+  const periodHint =
+    records[0]?.periodStart &&
+    new Date(records[0].periodStart).toLocaleString(undefined, {
+      month: "long",
+      year: "numeric",
+    });
 
-  // Payments (Page 3)
-  doc.addPage();
-  y = 40;
-  doc.setFontSize(12);
-  doc.text("Payments", 40, y);
-  y += 10;
-  autoTable(doc, {
-    startY: y,
-    head: [["Pay #", "Order ID", "Buyer ID", "Amount", "Method", "Date", "Description"]],
-    body: payRows,
-    styles: { fontSize: 9, cellPadding: 3, overflow: "linebreak" },
-    columnStyles: { 6: { cellWidth: 180 } },
-  });
-
-  // 4) Download
-  doc.save(`finance-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(
+    `salary-history${periodHint ? "-" + periodHint : ""}-${new Date()
+      .toISOString()
+      .slice(0, 10)}.pdf`
+  );
 }
