@@ -25,12 +25,43 @@ const Header = () => {
     { name: "About", action: () => scrollToSection("about") },
     { name: "Marketplace", href: "/marketplace" },
     { name: "Contact", action: () => scrollToSection("contact") },
+    { name: "Feedback", action: () => scrollToSection("feedback") },
   ];
 
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  // Helper function to get dashboard path based on role
+  const getDashboardPath = (userRole) => {
+    switch (userRole) {
+      case "admin":
+        return "/admindashboard";
+      case "owner":
+        return "/dashboard";
+      case "staff":
+        return "/staffdashboard";
+      case "User":
+      default:
+        return "/userdashboard";
+    }
+  };
+
+  // Helper function to get role display name
+  const getRoleDisplayName = (userRole) => {
+    switch (userRole) {
+      case "admin":
+        return "Admin Dashboard";
+      case "owner":
+        return "Owner Dashboard";
+      case "staff":
+        return "Staff Dashboard";
+      case "User":
+      default:
+        return "User Dashboard";
+    }
   };
 
   return (
@@ -78,9 +109,7 @@ const Header = () => {
             <Button variant="ghost" size="sm" className="relative" asChild>
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  3
-                </span>
+                
               </Link>
             </Button>
             {!isAuthenticated ? (
@@ -98,11 +127,27 @@ const Header = () => {
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to={role === "admin" ? "/dashboard" : "/userdashboard"}>
+                  <Link to={getDashboardPath(role)}>
                     <User className="h-4 w-4 mr-2" />
-                    {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
+                    {user?.firstName ? `${user.firstName}'s Dashboard` : getRoleDisplayName(role)}
                   </Link>
                 </Button>
+                {/* <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-foreground">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'User'}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {role || 'User'}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={getDashboardPath(role)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                </div> */}
                 <Button variant="destructive" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>
@@ -148,9 +193,7 @@ const Header = () => {
                   <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Cart
-                    <span className="absolute left-8 top-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                      3
-                    </span>
+                    
                   </Link>
                 </Button>
                 {!isAuthenticated ? (
@@ -168,9 +211,9 @@ const Header = () => {
                 ) : (
                   <>
                     <Button variant="ghost" size="sm" className="justify-start" asChild>
-                      <Link to={role === "admin" ? "/dashboard" : "/userdashboard"} onClick={() => setIsMenuOpen(false)}>
+                      <Link to={getDashboardPath(role)} onClick={() => setIsMenuOpen(false)}>
                         <User className="h-4 w-4 mr-2" />
-                        {user?.firstName ? `${user.firstName}'s Dashboard` : (role === "admin" ? "Admin" : "Dashboard")}
+                        {user?.firstName ? `${user.firstName}'s Dashboard` : getRoleDisplayName(role)}
                       </Link>
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => { setIsMenuOpen(false); handleLogout(); }}>

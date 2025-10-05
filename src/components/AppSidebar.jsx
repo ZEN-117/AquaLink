@@ -18,7 +18,10 @@ import {
   ShoppingBag,
   HouseIcon,
   Fish,
-  ChevronDown // 👉 Added for finance dropdown arrow
+  ChevronDown,
+  Warehouse,
+  MessageSquare,
+  History
 } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react"; // 👉 Needed for finance expand/collapse logic
@@ -30,9 +33,9 @@ const menuItems = [
     icon: ShoppingBag,
   },
   { 
-    title: "Profile", 
-    url: "/dashboard/profile", 
-    icon: User,
+    title: "Fish Stock", 
+    url: "/dashboard/stock", 
+    icon: BarChart3,
   },
   { 
     title: "Finances", 
@@ -40,15 +43,21 @@ const menuItems = [
     icon: DollarSign,
     isFinanceParent: true, 
   },
-  { 
-    title: "Fish Stock", 
-    url: "/dashboard/stock", 
-    icon: BarChart3,
-  },
    { 
     title: "Inventory", 
     url: "/dashboard/inventory", 
-    icon: BarChart3,
+    icon: Warehouse,
+    isInventoryParent: true,
+  },
+  { 
+    title: "Feedback Management", 
+    url: "/dashboard/feedback", 
+    icon: MessageSquare,
+  },
+  { 
+    title: "Profile", 
+    url: "/dashboard/profile", 
+    icon: User,
   },
 ];
 
@@ -68,6 +77,20 @@ const financeChildren = [
     title: "My Payments",
     url: "/dashboard/finances/mypayments",
     icon: DollarSign,
+  },
+];
+
+// 👉 Inventory children added
+const inventoryChildren = [
+  {
+    title: "Current Inventory",
+    url: "/dashboard/inventory",
+    icon: Warehouse,
+  },
+  {
+    title: "History",
+    url: "/dashboard/inventory/history",
+    icon: History,
   },
 ];
 
@@ -107,6 +130,28 @@ export function AppSidebar() {
     navigate("/dashboard/finances");
   };
   // === End finance-specific logic ===
+
+  // === Inventory-specific logic ===
+  const isOnInventory = useMemo(
+    () => location.pathname.startsWith("/dashboard/inventory"),
+    [location.pathname]
+  );
+
+  const [openInventory, setOpenInventory] = useState(isOnInventory);
+  useEffect(() => {
+    if (isOnInventory) setOpenInventory(true);
+  }, [isOnInventory]);
+
+  const handleInventoryClick = (e) => {
+    e.preventDefault();
+    if (collapsed) {
+      navigate("/dashboard/inventory");
+      return;
+    }
+    setOpenInventory((p) => !p);
+    navigate("/dashboard/inventory");
+  };
+  // === End inventory-specific logic ===
 
   return (
     <Sidebar
@@ -186,6 +231,66 @@ export function AppSidebar() {
                                     <span className={`block text-xs truncate ${isActive ? "text-background/80" : "text-primary"}`}>
                                       {child.description}
                                     </span>
+                                  </div>
+                                </div>
+                              )}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                }
+
+                 if (item.isInventoryParent) {
+                  // === Inventory parent with dropdown ===
+                  const parentActive = isOnInventory;
+
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {/* Parent */}
+                      <a
+                        href={item.url}
+                        onClick={handleInventoryClick}
+                        aria-current={parentActive ? "page" : undefined}
+                        aria-expanded={!collapsed ? openInventory : undefined}
+                        className={`flex items-center p-3 rounded-lg min-h-[56px] transition-all duration-200 hover-scale cursor-pointer
+                          ${
+                            parentActive
+                              ? "bg-gradient-to-r from-primary to-black text-background font-medium"
+                              : "hover:bg-aqua/10 hover:text-aqua text-foreground"
+                          }`}
+                      >
+                        <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                        {!collapsed && (
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-base font-medium">{item.title}</span>
+                          </div>
+                        )}
+                        {!collapsed && (
+                          <ChevronDown
+                            className={`w-4 h-4 ml-2 transition-transform ${openInventory ? "rotate-180" : ""}`}
+                          />
+                        )}
+                      </a>
+
+                      {/* Children */}
+                      {!collapsed && openInventory && (
+                        <div className="mt-1 ml-2">
+                          {inventoryChildren.map((child) => (
+                            <NavLink key={child.title} to={child.url} end>
+                              {({ isActive }) => (
+                                <div
+                                  className={`flex items-center p-3 rounded-lg min-h-[48px] transition-all duration-200 hover-scale cursor-pointer ml-6
+                                    ${
+                                      isActive
+                                        ? "bg-gradient-to-r from-primary to-black text-background font-medium shadow-sm"
+                                        : "hover:bg-aqua/5 text-foreground"
+                                    }`}
+                                >
+                                  <child.icon className={`w-4 h-4 mr-3 flex-shrink-0 ${isActive ? "text-background" : ""}`} />
+                                  <div className="flex-1 min-w-0">
+                                    <span className="block text-sm font-medium">{child.title}</span>
                                   </div>
                                 </div>
                               )}

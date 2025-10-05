@@ -1,28 +1,21 @@
 import { Routes, Route } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import DashboardOverview from "@/components/dashboard/DashboardOverview";
-import ManageGigs from "@/components/dashboard/ManageGigs";
+import { StaffAppSidebar } from "@/components/StaffAppSidebar";
+import StaffOverview from "@/components/staff/StaffOverview";
+import StaffStock from "@/components/staff/StaffStock";
+import StaffSalary from "@/components/staff/StaffSalary";
+import StaffTasks from "@/components/staff/StaffTasks";
+import StaffSchedule from "@/components/staff/StaffSchedule";
 import UserProfile from "@/components/dashboard/UserProfile";
-import FinanceManagement from "@/components/dashboard/FinanceManagement";
-import FishInventory from "@/components/dashboard/FishInventory";
-import InventoryHistory from "@/components/dashboard/InventoryHistory";
-import FishStock from "@/components/dashboard/FishStock";
-import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-// ⤵️ NEW: import finance sub-pages
-import ManageTransactions from "@/pages/Finance/ManageTransactions";
-import SalaryManagement from "@/pages/Finance/SalaryManagement";
-import MyPayments from "@/pages/Finance/MyPayments";
-
-const Dashboard = () => {
+const StaffDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
+        <StaffAppSidebar />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
@@ -33,7 +26,7 @@ const Dashboard = () => {
                 <div className="relative max-w-md">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input 
-                    placeholder="Search guppies, orders, analytics..." 
+                    placeholder="Search tasks, stock, schedule..." 
                     className="pl-10 border-aqua/20 focus:border-aqua bg-background/50"
                   />
                 </div>
@@ -51,7 +44,7 @@ const Dashboard = () => {
                 </Button>
 
                 <div className="w-8 h-8 rounded-full bg-gradient-aqua flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">JD</span>
+                  <span className="text-white text-sm font-medium">ST</span>
                 </div>
               </div>
             </div>
@@ -61,19 +54,12 @@ const Dashboard = () => {
           <main className="flex-1 overflow-auto">
             <div className="p-6 animate-fade-in">
               <Routes>
-                <Route index element={<DashboardOverview />} />
-                <Route path="gigs" element={<ManageGigs />} />
+                <Route index element={<StaffOverview />} />
+                <Route path="stock" element={<StaffStock />} />
+                <Route path="salary" element={<StaffSalary />} />
+                <Route path="tasks" element={<StaffTasks />} />
+                <Route path="schedule" element={<StaffSchedule />} />
                 <Route path="profile" element={<UserProfile />} />
-                {/* Finance overview */}
-                <Route path="finances" element={<FinanceManagement />} />
-                {/* ⤵️ Finance sub-pages (so /dashboard/finances/* work) */}
-                <Route path="finances/transactions" element={<ManageTransactions />} />
-                <Route path="finances/salaries" element={<SalaryManagement />} />
-                <Route path="finances/mypayments" element={<MyPayments />} />
-                <Route path="stock" element={<FishStock />} />
-                <Route path="inventory" element={<FishInventory />} />
-                <Route path="inventory/history" element={<InventoryHistory />} />
-                <Route path="feedback" element={<FeedbackManagement />} />
               </Routes>
             </div>
           </main>
@@ -83,4 +69,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default StaffDashboard;
