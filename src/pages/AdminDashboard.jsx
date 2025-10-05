@@ -7,9 +7,8 @@ import SecuritySettings from "@/components/admin/SecuritySettings";
 import SystemAnalytics from "@/components/admin/SystemAnalytics";
 import ContentManagement from "@/components/admin/ContentManagement";
 import UserProfile from "@/components/dashboard/UserProfile";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import FishStock from "@/components/dashboard/FishStock";
 
 const AdminDashboard = () => {
@@ -24,13 +23,6 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-between h-full px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-aqua/10 hover:text-aqua transition-colors" />
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input 
-                    placeholder="Search users, analytics, settings..." 
-                    className="pl-10 border-aqua/20 focus:border-aqua bg-background/50"
-                  />
-                </div>
               </div>
               
               <div className="flex items-center gap-4">

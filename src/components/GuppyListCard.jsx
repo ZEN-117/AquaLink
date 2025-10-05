@@ -147,10 +147,10 @@ const GuppyListCard = ({
 
               {/* Price */}
               <div className="flex items-center space-x-2 mb-3">
-                <span className="text-xl font-bold text-primary">${price}</span>
+                <span className="text-xl font-bold text-primary">Rs. {price}</span>
                 {originalPrice && (
                   <span className="text-sm text-muted-foreground line-through">
-                    ${originalPrice}
+                    Rs. {originalPrice}
                   </span>
                 )}
               </div>

@@ -7,9 +7,8 @@ import StaffSalary from "@/components/staff/StaffSalary";
 import StaffTasks from "@/components/staff/StaffTasks";
 import StaffSchedule from "@/components/staff/StaffSchedule";
 import UserProfile from "@/components/dashboard/UserProfile";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const StaffDashboard = () => {
   return (
@@ -23,13 +22,6 @@ const StaffDashboard = () => {
             <div className="flex items-center justify-between h-full px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-aqua/10 hover:text-aqua transition-colors" />
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input 
-                    placeholder="Search tasks, stock, schedule..." 
-                    className="pl-10 border-aqua/20 focus:border-aqua bg-background/50"
-                  />
-                </div>
               </div>
               
               <div className="flex items-center gap-4">

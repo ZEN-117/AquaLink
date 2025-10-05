@@ -17,14 +17,15 @@ import {
   LogOut,
   ShoppingBag,
   HouseIcon,
-  Fish
+  Fish,
+  Package
 } from "lucide-react";
 
 const menuItems = [
   { 
     title: "Orders", 
     url: "/userdashboard/orders", 
-    icon: User,
+    icon: Package,
   },
   { 
     title: "Profile", 

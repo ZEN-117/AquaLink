@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Heart, Eye, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star } from "lucide-react";
 
 const rarityColors = {
   Common: "bg-muted text-muted-foreground",
@@ -78,19 +78,6 @@ const GuppyCard = ({
             }`}
           />
 
-          {/* Hover Overlay */}
-          <div
-            className={`absolute inset-0 bg-primary/10 backdrop-blur-[1px] transition-all duration-300 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Button variant="wave" size="sm" className="shadow-lg">
-                <Eye className="h-4 w-4 mr-2" />
-                Quick View
-              </Button>
-            </div>
-          </div>
 
           {/* Stock Indicator */}
           <div className="absolute bottom-3 right-3">
@@ -165,10 +152,10 @@ const GuppyCard = ({
           {/* Price */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-primary">${price}</span>
+              <span className="text-2xl font-bold text-primary">Rs. {price}</span>
               {originalPrice && (
                 <span className="text-sm text-muted-foreground line-through">
-                  ${originalPrice}
+                  Rs. {originalPrice}
                 </span>
               )}
             </div>

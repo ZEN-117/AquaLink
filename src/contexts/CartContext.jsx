@@ -55,22 +55,7 @@ const cartReducer = (state, action) => {
 };
 
 const initialState = {
-  items: [
-    {
-      id: 1,
-      name: "Premium Blue Guppy",
-      price: 25.99,
-      image: "/src/assets/guppy-blue.jpg",
-      quantity: 2,
-    },
-    {
-      id: 2,
-      name: "Rainbow Guppy",
-      price: 35.99,
-      image: "/src/assets/guppy-rainbow.jpg",
-      quantity: 1,
-    },
-  ],
+  items: [],
 };
 
 export const CartProvider = ({ children }) => {
@@ -103,12 +88,18 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'CLEAR_CART' });
   };
 
+  const resetCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+    localStorage.removeItem('cart');
+  };
+
   const getTotal = () => {
     return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   const getItemCount = () => {
-    return state.items.reduce((count, item) => count + item.quantity, 0);
+    // Return number of unique items (not total quantity)
+    return state.items.filter(item => item.quantity > 0).length;
   };
 
   const value = {
@@ -117,6 +108,7 @@ export const CartProvider = ({ children }) => {
     removeItem,
     updateQuantity,
     clearCart,
+    resetCart,
     getTotal,
     getItemCount,
   };

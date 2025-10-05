@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Fish, Menu, X, User, ShoppingCart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useCartSync } from "../hooks/useCartSync";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, role, logout } = useAuth();
+  const { cartCount } = useCartSync();
 
   const scrollToSection = (sectionId) => {
     if (location.pathname !== "/") {
@@ -106,10 +108,21 @@ const Header = () => {
 
           {/* Right: User actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative" asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`relative hover:bg-primary/10 active:bg-primary/10 ${
+                location.pathname === '/cart' ? 'bg-primary/10' : ''
+              }`} 
+              asChild
+            >
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
-                
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </Button>
             {!isAuthenticated ? (
@@ -189,11 +202,22 @@ const Header = () => {
                 </div>
               ))}
               <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-                <Button variant="ghost" size="sm" className="justify-start relative" asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`justify-start relative hover:bg-primary/10 active:bg-primary/10 ${
+                    location.pathname === '/cart' ? 'bg-primary/10' : ''
+                  }`} 
+                  asChild
+                >
                   <Link to="/cart" onClick={() => setIsMenuOpen(false)}>
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Cart
-                    
+                    {cartCount > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                        {cartCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
                 {!isAuthenticated ? (

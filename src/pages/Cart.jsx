@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,16 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CreditCard } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { useCartSync } from "../hooks/useCartSync";
 
 const API_BASE = "http://localhost:5000";
 
 const Cart = () => {
   const { user } = useAuth();
   const email = user?.email;
+  const navigate = useNavigate();
+  const { refreshCart } = useCartSync();
 
   const [cartItems, setCartItems] = useState([]);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [fishStocks, setFishStocks] = useState([]);
 
   const fetchCart = async () => {
     try {
@@ -32,6 +36,7 @@ const Cart = () => {
         image: i?.product?.image,
         quantity: Number(i?.quantity ?? 1),
         description: i?.product?.description || "",
+        fishCode: i?.product?.fishCode || "",
       }));
       setCartItems(items);
     } catch (e) {
@@ -40,13 +45,80 @@ const Cart = () => {
     }
   };
 
+  const fetchFishStocks = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/fishstocks`);
+      setFishStocks(res.data || []);
+    } catch (err) {
+      console.error("Error fetching fish stocks:", err);
+    }
+  };
+
   useEffect(() => {
     fetchCart();
+    fetchFishStocks();
   }, [email]);
 
-  const updateQuantity = (id, newQty) => {
+  // Poll fish stock periodically to reflect real-time changes
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchFishStocks();
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Get current stock for a product
+  const getCurrentStock = (product) => {
+    const match = fishStocks.find((f) => f.fishCode === product.fishCode);
+    return match?.stock ?? 0;
+  };
+
+  const updateQuantity = async (id, newQty) => {
     if (newQty < 1) return;
-    setCartItems((items) => items.map((it) => (it.id === id ? { ...it, quantity: newQty } : it)));
+    const item = cartItems.find((it) => it.id === id);
+    if (!item) return;
+    
+    const maxStock = getCurrentStock(item);
+    if (newQty > maxStock) {
+      toast.error(`Only ${maxStock} units available in stock`);
+      return;
+    }
+    
+    try {
+      await axios.put(`${API_BASE}/api/cart/update`, {
+        email,
+        productId: id,
+        quantity: newQty
+      });
+      setCartItems((items) => items.map((it) => (it.id === id ? { ...it, quantity: newQty } : it)));
+      // Dispatch custom event to update cart count immediately
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error("Failed to update quantity:", error);
+      toast.error("Failed to update quantity");
+    }
+  };
+
+  const handleCustomQuantityChange = async (id, value) => {
+    const item = cartItems.find((it) => it.id === id);
+    if (!item) return;
+    
+    const maxStock = getCurrentStock(item);
+    const newQty = Math.max(1, Math.min(maxStock, parseInt(value) || 1));
+    
+    try {
+      await axios.put(`${API_BASE}/api/cart/update`, {
+        email,
+        productId: id,
+        quantity: newQty
+      });
+      setCartItems((items) => items.map((it) => (it.id === id ? { ...it, quantity: newQty } : it)));
+      // Dispatch custom event to update cart count immediately
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error("Failed to update quantity:", error);
+      toast.error("Failed to update quantity");
+    }
   };
 
 // Remove one item from cart
@@ -57,6 +129,8 @@ const removeItem = async (id) => {
     });
     setCartItems((items) => items.filter((it) => it.id !== id));
     toast.success("Item removed from cart");
+    // Dispatch custom event to update cart count immediately
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   } catch (e) {
     console.error("❌ removeItem error:", e);
     toast.error("Failed to remove item");
@@ -71,6 +145,8 @@ const clearCart = async () => {
     });
     setCartItems([]);
     toast.success("Cart cleared");
+    // Dispatch custom event to update cart count immediately
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
   } catch (e) {
     console.error("❌ clearCart error:", e);
     toast.error("Failed to clear cart");
@@ -92,15 +168,19 @@ const clearCart = async () => {
   const tax = (subtotal - discountAmount) * 0.08;
   const total = subtotal - discountAmount + shipping + tax;
 
-  const handleCheckout = async () => {
-    try {
-      await axios.post(`${API_BASE}/api/orders/checkout`, { email }); // ✅ send email instead of userId
-      toast.success("Order placed!");
-      setCartItems([]);
-    } catch (e) {
-      console.error("❌ checkout error:", e);
-      toast.error("Checkout failed");
-    }
+  const handleCheckout = () => {
+    // Navigate to checkout page with cart data
+    navigate("/checkout", {
+      state: {
+        cartItems,
+        orderSummary: {
+          subtotal,
+          shipping: shipping === 0 ? 0 : shipping,
+          tax,
+          total
+        }
+      }
+    });
   };
 
   if (cartItems.length === 0) {
@@ -168,18 +248,39 @@ const clearCart = async () => {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-8 text-center font-medium">{item.quantity}</span>
-                          <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                            <Plus className="h-3 w-3" />
-                          </Button>
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <Input
+                              type="number"
+                              min="1"
+                              max={getCurrentStock(item)}
+                              value={item.quantity}
+                              onChange={(e) => handleCustomQuantityChange(item.id, e.target.value)}
+                              className={`w-16 text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                item.quantity > getCurrentStock(item) ? "border-red-500 focus:border-red-500" : ""
+                              }`}
+                            />
+                            <Button variant="outline" size="sm" onClick={() => updateQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= getCurrentStock(item)}>
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <p className={`text-xs ${
+                            getCurrentStock(item) <= 5 
+                              ? "text-red-500 font-medium" 
+                              : getCurrentStock(item) <= 20 
+                              ? "text-yellow-600" 
+                              : "text-muted-foreground"
+                          }`}>
+                            {getCurrentStock(item)} units available
+                            {getCurrentStock(item) <= 5 && " (Low Stock)"}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-lg">${(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} each</p>
+                          <p className="font-semibold text-lg">Rs. {(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">Rs. {item.price.toFixed(2)} each</p>
                         </div>
                       </div>
                     </div>
@@ -198,17 +299,17 @@ const clearCart = async () => {
               <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Subtotal</span><span>Rs. {subtotal.toFixed(2)}</span></div>
                   {discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({(discount * 100)}%)</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
+                      <span>-Rs. {discountAmount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span></div>
-                  <div className="flex justify-between"><span>Tax</span><span>${tax.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? "Free" : `Rs. ${shipping.toFixed(2)}`}</span></div>
+                  <div className="flex justify-between"><span>Tax</span><span>Rs. {tax.toFixed(2)}</span></div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg"><span>Total</span><span>${total.toFixed(2)}</span></div>
+                  <div className="flex justify-between font-semibold text-lg"><span>Total</span><span>Rs. {total.toFixed(2)}</span></div>
                 </div>
 
                 <div className="space-y-2">
