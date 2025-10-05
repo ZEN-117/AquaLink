@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { exportFinancePDF } from "@/lib/exportFinancePDF";
-import { formatCurrency } from "../../utils";
+import { formatCurrency } from "@/utils";
 
 import {
   Card,
@@ -39,22 +39,24 @@ import { Label } from "@/components/ui/label";
 const API_BASE = "http://localhost:5000/api";
 
 // --- helpers ---
-const currency = (n) => formatCurrency(n);
+const currency = (n) => formatCurrency(Number(n) || 0);
 
-// Normalize any backend string ("$900.00", "+$900", "900") to "+Rs …"/"-Rs …"
+// Normalize any backend string/number to a signed Rs format
 const renderSignedAmount = (val) => {
   const s = String(val ?? "").trim();
   const isNeg = s.startsWith("-");
-  // pull numeric content
-  const num = typeof val === "number" ? Math.abs(val) : Math.abs(parseFloat(s.replace(/[^0-9.-]/g, ""))) || 0;
+  const num =
+    typeof val === "number"
+      ? Math.abs(val)
+      : Math.abs(parseFloat(s.replace(/[^0-9.-]/g, ""))) || 0;
   const out = formatCurrency(num);
   return (isNeg ? "-" : "+") + out;
 };
 
 // Color green when positive, red when negative
-const amountColor = (val) => (String(val ?? "").trim().startsWith("-") ? "text-red-500" : "text-green-500");
+const amountColor = (val) =>
+  String(val ?? "").trim().startsWith("-") ? "text-red-500" : "text-green-500";
 
-// --- main ---
 export default function FinanceManagement() {
   const [data, setData] = useState(null);
   const [isLoading, setLoading] = useState(true);
@@ -101,7 +103,13 @@ export default function FinanceManagement() {
   // ===== Export Report (PDF) =====
   const onExportPDF = async () => {
     try {
-      await exportFinancePDF();
+      await exportFinancePDF({
+        generatedAt: new Date(),
+        periodLabel: "Current period", // or compute from your filters
+        totals,
+        earnings,
+        recent,
+      });
     } catch (e) {
       console.error(e);
       toast.error("Export failed");
@@ -153,7 +161,9 @@ export default function FinanceManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Finance Management</h1>
-          <p className="text-muted-foreground">Track your earnings, payments, and financial analytics</p>
+          <p className="text-muted-foreground">
+            Track your earnings, payments, and financial analytics
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -161,7 +171,7 @@ export default function FinanceManagement() {
             variant="outline"
             className="border-aqua/20 hover:bg-aqua/10"
             disabled={isLoading || isError || !data}
-            title="Export a full PDF report: Transactions, Staff, Payments"
+            title="Export a full PDF report: totals, monthly earnings, and recent activity"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -243,7 +253,9 @@ export default function FinanceManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{currency(totals.thisMonthNet)}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {currency(totals.thisMonthNet)}
+              </div>
               <p className="text-xs text-green-500">Auto-updates as you record items</p>
             </CardContent>
           </Card>
@@ -256,8 +268,12 @@ export default function FinanceManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{currency(totals.lifetimeEarnings)}</div>
-              <p className="text-xs text-muted-foreground">Lifetime income (payments + CR transactions)</p>
+              <div className="text-2xl font-bold text-foreground">
+                {currency(totals.lifetimeEarnings)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Lifetime income (payments + CR transactions)
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -286,9 +302,19 @@ export default function FinanceManagement() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-foreground">{currency(m.amount)}</div>
-                    <div className={`flex items-center gap-1 text-sm ${m.growth >= 0 ? "text-green-500" : "text-red-500"}`}>
-                      {m.growth >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    <div className="text-xl font-bold text-foreground">
+                      {currency(m.amount)}
+                    </div>
+                    <div
+                      className={`flex items-center gap-1 text-sm ${
+                        m.growth >= 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {m.growth >= 0 ? (
+                        <TrendingUp className="w-4 h-4" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4" />
+                      )}
                       {Math.abs(m.growth)}%
                     </div>
                   </div>
@@ -332,7 +358,9 @@ export default function FinanceManagement() {
                   </div>
                 </div>
               ))}
-              {recent.length === 0 && <div className="text-muted-foreground">No recent activity.</div>}
+              {recent.length === 0 && (
+                <div className="text-muted-foreground">No recent activity.</div>
+              )}
             </div>
           </CardContent>
         </Card>
