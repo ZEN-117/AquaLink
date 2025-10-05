@@ -10,9 +10,8 @@ import InventoryHistory from "@/components/dashboard/InventoryHistory";
 import FishStock from "@/components/dashboard/FishStock";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import IncomingOrders from "@/components/admin/IncomingOrders";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 // ⤵️ NEW: import finance sub-pages
 import ManageTransactions from "@/pages/Finance/ManageTransactions";
@@ -31,13 +30,6 @@ const Dashboard = () => {
             <div className="flex items-center justify-between h-full px-6">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-aqua/10 hover:text-aqua transition-colors" />
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input 
-                    placeholder="Search guppies, orders, analytics..." 
-                    className="pl-10 border-aqua/20 focus:border-aqua bg-background/50"
-                  />
-                </div>
               </div>
               
               <div className="flex items-center gap-4">
