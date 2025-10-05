@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
+import { exportGigsPDF } from "@/lib/exportGigsPDF";
 import {
   Dialog,
   DialogContent,
@@ -209,6 +210,27 @@ const getCurrentStockForGig = (gig) => {
   return gig.stock;
 };
 
+const handleExportPDF = async () => {
+  if (products.length === 0) {
+    toast.error("No gigs data to export");
+    return;
+  }
+
+  try {
+    toast.loading("Generating PDF...", { id: "gigs-pdf-export" });
+    const result = await exportGigsPDF(products, fishStocks);
+    
+    if (result.success) {
+      toast.success(`PDF exported successfully: ${result.fileName}`, { id: "gigs-pdf-export" });
+    } else {
+      toast.error(`Failed to export PDF: ${result.error}`, { id: "gigs-pdf-export" });
+    }
+  } catch (error) {
+    console.error("Export error:", error);
+    toast.error("Failed to export PDF", { id: "gigs-pdf-export" });
+  }
+};
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -217,17 +239,28 @@ const getCurrentStockForGig = (gig) => {
           <h1 className="text-3xl font-bold text-foreground">Manage Gigs</h1>
           <p className="text-muted-foreground">Add and manage your guppy listings</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingProduct(null);
-            setFormData({ title: "", price: 0, image: "", productCode: "", fishCode: "" });
-            setShowForm(true);
-          }}
-          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Gig
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={handleExportPDF}
+            variant="outline"
+            className="border-aqua/20 hover:bg-aqua/10 hover:text-aqua hover:border-aqua transition-all duration-300"
+            disabled={products.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingProduct(null);
+              setFormData({ title: "", price: 0, image: "", productCode: "", fishCode: "" });
+              setShowForm(true);
+            }}
+            className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Gig
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
+import { exportFishStockPDF } from "@/lib/exportFishStockPDF";
 
 // Import Dialog components
 import {
@@ -231,6 +232,27 @@ const FishStock = () => {
     }
   };
 
+  const handleExportPDF = async () => {
+    if (fishStocks.length === 0) {
+      toast.error("No fish stock data to export");
+      return;
+    }
+
+    try {
+      toast.loading("Generating PDF...", { id: "pdf-export" });
+      const result = await exportFishStockPDF(fishStocks);
+      
+      if (result.success) {
+        toast.success(`PDF exported successfully: ${result.fileName}`, { id: "pdf-export" });
+      } else {
+        toast.error(`Failed to export PDF: ${result.error}`, { id: "pdf-export" });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export PDF", { id: "pdf-export" });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -241,17 +263,28 @@ const FishStock = () => {
             Add and manage your fish stock records
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingFish(null);
-            setFormData({ fishCode: "", title: "", stock: 0, imageFile: null });
-            setShowForm(true);
-          }}
-          className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Fish Stock
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={handleExportPDF}
+            variant="outline"
+            className="border-aqua/20 hover:bg-aqua/10 hover:text-aqua hover:border-aqua transition-all duration-300"
+            disabled={fishStocks.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingFish(null);
+              setFormData({ fishCode: "", title: "", stock: 0, imageFile: null });
+              setShowForm(true);
+            }}
+            className="bg-gradient-to-r from-primary to-black hover:opacity-90 hover-scale"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Fish Stock
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
