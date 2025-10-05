@@ -9,6 +9,7 @@ import FishInventory from "@/components/dashboard/FishInventory";
 import InventoryHistory from "@/components/dashboard/InventoryHistory";
 import FishStock from "@/components/dashboard/FishStock";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
+import IncomingOrders from "@/components/admin/IncomingOrders";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ const Dashboard = () => {
               <Routes>
                 <Route index element={<DashboardOverview />} />
                 <Route path="gigs" element={<ManageGigs />} />
+                <Route path="orders" element={<IncomingOrders />} />
                 <Route path="profile" element={<UserProfile />} />
                 {/* Finance overview */}
                 <Route path="finances" element={<FinanceManagement />} />

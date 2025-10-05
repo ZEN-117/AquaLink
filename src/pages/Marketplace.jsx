@@ -13,6 +13,7 @@ import ChatBot from "@/components/ChatBot";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import { useUserDetails } from "../hooks/useUserDetails";
+import { useCartSync } from "../hooks/useCartSync";
 
 const API_BASE = "http://localhost:5000";
 
@@ -28,6 +29,7 @@ const sortOptions = [
 const Marketplace = () => {
   const { user } = useAuth();
   const email = user?.email;
+  const { refreshCart } = useCartSync();
   
   // Debug: Log user object to see what fields are available
   console.log('User object in Marketplace:', user);
@@ -124,6 +126,8 @@ const Marketplace = () => {
         quantity: 1,
       });
       toast.success("Added to cart!");
+      // Dispatch custom event to update cart count immediately
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
     } catch (e) {
       console.error("addToCart error:", e?.response?.data || e.message);
       toast.error("Failed to add to cart");

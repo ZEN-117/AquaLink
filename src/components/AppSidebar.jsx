@@ -21,7 +21,8 @@ import {
   ChevronDown,
   Warehouse,
   MessageSquare,
-  History
+  History,
+  Package
 } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react"; // 👉 Needed for finance expand/collapse logic
@@ -36,6 +37,11 @@ const menuItems = [
     title: "Fish Stock", 
     url: "/dashboard/stock", 
     icon: BarChart3,
+  },
+  { 
+    title: "Incoming Orders", 
+    url: "/dashboard/orders", 
+    icon: Package,
   },
   { 
     title: "Finances", 
