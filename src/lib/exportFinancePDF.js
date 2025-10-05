@@ -2,7 +2,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-/* ===================== Helpers ===================== */
+/* ===================== Shared helpers ===================== */
 export function formatCurrency(n) {
   const num = Number(n || 0);
   return `Rs ${num.toLocaleString(undefined, {
@@ -10,6 +10,7 @@ export function formatCurrency(n) {
     maximumFractionDigits: 2,
   })}`;
 }
+
 const fmtDate = (d) =>
   d
     ? new Date(d).toLocaleString(undefined, {
@@ -18,9 +19,10 @@ const fmtDate = (d) =>
         day: "2-digit",
       })
     : "-";
+
 const hasRows = (arr) => Array.isArray(arr) && arr.length > 0;
 
-// Parse possibly signed / string amounts -> { abs }
+// Show amounts without sign (because the table’s Type already conveys expense/income)
 function parseAmountAbs(raw) {
   if (raw == null) return 0;
   const s = String(raw).trim();
@@ -30,20 +32,35 @@ function parseAmountAbs(raw) {
       : Math.abs(parseFloat(s.replace(/[^0-9.-]/g, ""))) || 0;
   return val;
 }
-
-// Always show currency **without sign**
 const fmtAmountNoSign = (raw) => formatCurrency(parseAmountAbs(raw));
 
-// field pickers
-const pick = (o, keys) => keys.find((k) => o?.[k] != null);
-const getDate = (r) => r[pick(r, ["date", "createdAt", "txDate", "paidAt", "timestamp"])];
-const getUpdated = (r) => r[pick(r, ["updatedAt", "modifiedAt", "lastUpdated"])];
+// Safe pick
+const pick = (o, keys) => keys.find((k) => o && o[k] != null);
+
+// Flexible getters for “recent” items
+const getDate = (r) =>
+  r[pick(r, ["date", "createdAt", "txDate", "paidAt", "timestamp", "transactionDate"])];
+const getUpdated = (r) =>
+  r[
+    pick(r, [
+      "updatedAt",
+      "updated",
+      "dateUpdated",
+      "lastUpdated",
+      "modifiedAt",
+      "lastModified",
+      "updated_on",
+      "updatedOn",
+      "modified_on",
+      "modifiedOn",
+    ])
+  ];
 const getType = (r) => r[pick(r, ["type", "category", "kind"])];
 const getStatus = (r) => r[pick(r, ["status", "state"])];
 const getDesc = (r) => r[pick(r, ["description", "desc", "note", "title", "narration"])];
 const getAmount = (r) => r[pick(r, ["amount", "total", "value", "paid"])];
 
-// classification
+// Classification for recent[]
 function isWithdrawal(r) {
   const t = (getType(r) || "").toLowerCase();
   const d = (getDesc(r) || "").toLowerCase();
@@ -69,18 +86,23 @@ function isExpense(r) {
   return !isWithdrawal(r) && !isSalary(r) && !isIncome(r);
 }
 
-/* ===================== Owner Overview Export ===================== */
+/* ==========================================================
+   Finance Report (Owner)
+   Renders: Overview → Monthly → Transactions (3 sections)
+            → Salary (landscape, multi-page)
+   ========================================================== */
 export function exportFinancePDF({
   generatedAt = new Date(),
   periodLabel = "",
   totals = {},
   earnings = [],
   recent = [],
+  salaryRecords = [],
 } = {}) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const margin = 40;
 
-  // Header
+  // ---------- Header ----------
   doc.setFontSize(18);
   doc.text("Finance Report", margin, margin);
   doc.setFontSize(10);
@@ -94,7 +116,7 @@ export function exportFinancePDF({
 
   let y = margin + 36;
 
-  /* ---------- Summary (totals) ---------- */
+  // ---------- Overview ----------
   const hasAnyTotals =
     totals &&
     (totals.availableBalance != null ||
@@ -120,10 +142,8 @@ export function exportFinancePDF({
     y = doc.lastAutoTable.finalY + 18;
   }
 
-  /* ---------- Monthly Earnings (no %) ---------- */
+  // ---------- Monthly Earnings (no %) ----------
   if (hasRows(earnings)) {
-    // Build "Change" in Rs (no minus). If backend provides m.change, use it;
-    // otherwise derive from previous month's amount.
     const rows = earnings.map((m, i, arr) => {
       const amt = Number(m.amount || 0);
       const prev = i > 0 ? Number(arr[i - 1].amount || 0) : 0;
@@ -145,13 +165,23 @@ export function exportFinancePDF({
     y = doc.lastAutoTable.finalY + 18;
   }
 
-  /* ---------- Split recent ---------- */
+  // ---------- Transactions (3 sections) ----------
   const salaryRows = recent.filter(isSalary);
   const withdrawalRows = recent.filter(isWithdrawal);
   const incomeRows = recent.filter((r) => !isWithdrawal(r) && isIncome(r));
   const expenseRows = recent.filter(isExpense);
 
-  // generic section renderer with Txn + Updated + Description and seq IDs
+  // Allocate enough width for Description so it wraps correctly
+  const transColumnStyles = {
+    0: { cellWidth: 34, halign: "right" }, // #
+    1: { cellWidth: 74 },                  // Txn Date
+    2: { cellWidth: 84 },                  // Updated
+    3: { cellWidth: 60 },                  // Type
+    4: { cellWidth: 74 },                  // Status
+    5: { cellWidth: "auto" },              // Description (flex & wrap)
+    6: { cellWidth: 90, halign: "right" }, // Amount
+  };
+
   const renderSection = ({ title, rows }) => {
     if (!hasRows(rows)) return;
 
@@ -162,6 +192,7 @@ export function exportFinancePDF({
     autoTable(doc, {
       startY: y + 6,
       margin: { left: margin, right: margin },
+      tableWidth: "auto",
       head: [["#", "Txn Date", "Updated", "Type", "Status", "Description", "Amount"]],
       body: rows.map((r, idx) => [
         String(idx + 1).padStart(4, "0"),
@@ -172,17 +203,18 @@ export function exportFinancePDF({
         getDesc(r) || "-",
         fmtAmountNoSign(getAmount(r)),
       ]),
+      pageBreak: "auto",
+      overflow: "linebreak",
       theme: "grid",
-      styles: { fontSize: 10, cellPadding: 6 },
+      styles: { fontSize: 10, cellPadding: 6, valign: "top" },
       headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
-      columnStyles: { 6: { halign: "right" } },
+      columnStyles: transColumnStyles,
       alternateRowStyles: { fillColor: [248, 250, 253] },
-      didDrawPage: (data) => {
-        y = data.cursor.y + 12;
-      },
     });
 
-    // Subtotal
+    y = doc.lastAutoTable.finalY + 18;
+
+    // Subtotal for the section
     const total = rows.reduce((s, r) => s + parseAmountAbs(getAmount(r)), 0);
     autoTable(doc, {
       startY: y,
@@ -198,37 +230,103 @@ export function exportFinancePDF({
     y = doc.lastAutoTable.finalY + 18;
   };
 
-  // Order: Salary, Expenses, Payments Received, Withdrawals
-  renderSection({ title: "Salary Payments", rows: salaryRows });
   renderSection({ title: "Transactions (Expenses)", rows: expenseRows });
   renderSection({ title: "Payments Received", rows: incomeRows });
   renderSection({ title: "Withdrawals", rows: withdrawalRows });
 
-  // Nothing to show?
-  if (
-    !hasAnyTotals &&
-    !hasRows(earnings) &&
-    !hasRows(salaryRows) &&
-    !hasRows(expenseRows) &&
-    !hasRows(incomeRows) &&
-    !hasRows(withdrawalRows)
-  ) {
+  // ---------- Salary Payments (landscape, multi-page) ----------
+  if (hasRows(salaryRecords)) {
+    doc.addPage("a4", "landscape");
+
+    const lm = 40;
+    let sy = 40;
+
+    doc.setFontSize(16);
+    doc.text("Salary Payments (Detailed)", lm, sy);
+    doc.setFontSize(10);
+    doc.text(
+      "Includes period, OT, EPF/ETF, loan, tax, gross & net pay",
+      lm,
+      sy + 16
+    );
+    sy += 28;
+
+    const g = (r, keys, d = 0) => Number(r[pick(r, keys)] ?? d);
+    const gs = (r, keys, d = "") => String(r[pick(r, keys)] ?? d);
+
+    const getStaffName = (r) =>
+      gs(r, ["staffName", "employeeName", "name", "fullName"], "") ||
+      `${gs(r, ["firstName"], "")} ${gs(r, ["lastName"], "")}`.trim();
+
+    const rows = salaryRecords.map((r, idx) => {
+      const basic = g(r, ["basicSalary", "basic"]);
+      const allowances = g(r, ["allowances"]);
+      const epf = g(r, ["epf"]);
+      const etf = g(r, ["etf"]);
+      const loan = g(r, ["loan"]);
+      const tax = g(r, ["tax"]);
+      const gross = Number(r.grossSalary ?? 0) || basic + allowances;
+      const net = Number(r.netSalary ?? 0) || gross - (epf + etf + loan + tax);
+
+      return [
+        String(idx + 1).padStart(4, "0"),
+        getStaffName(r) || "-",
+        r.staffEmail || "-",
+        fmtDate(r.periodStart),
+        fmtDate(r.periodEnd),
+        formatCurrency(basic),
+        formatCurrency(allowances),
+        formatCurrency(epf),
+        formatCurrency(etf),
+        formatCurrency(loan),
+        formatCurrency(tax),
+        formatCurrency(gross),
+        formatCurrency(net),
+      ];
+    });
+
     autoTable(doc, {
-      startY: y,
-      margin: { left: margin, right: margin },
-      head: [["Section", "Status"]],
-      body: [["Overview", "No data for the selected period"]],
+      startY: sy,
+      margin: { left: lm, right: lm },
+      pageBreak: "auto",
+      overflow: "linebreak",
       theme: "grid",
-      styles: { fontSize: 10, cellPadding: 8 },
+      head: [
+        [
+          "#",
+          "Staff",
+          "Email",
+          "Period Start",
+          "Period End",
+          "Basic",
+          "Allowances",
+          "EPF",
+          "ETF",
+          "Loan",
+          "Tax",
+          "Gross",
+          "Net",
+        ],
+      ],
+      body: rows,
+      styles: { fontSize: 9, cellPadding: 5, valign: "top" },
       headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [248, 250, 253] },
+      // widths are reasonable by default; leave description-like fields to flex
     });
   }
 
   doc.save(`finance-report-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
-/* ===================== Staff Salary (unchanged API) ===================== */
-export function exportStaffSalaryTable({ staffName = "", staffEmail = "", records = [] } = {}) {
+/* ==========================================================
+   Staff Salary History (single staff) — unchanged external API
+   ========================================================== */
+export function exportStaffSalaryTable({
+  staffName = "",
+  staffEmail = "",
+  records = [],
+} = {}) {
   const inferNameFromRecords = (recs) => {
     const r = Array.isArray(recs) && recs.length ? recs[0] : null;
     if (!r) return "";
@@ -239,6 +337,7 @@ export function exportStaffSalaryTable({ staffName = "", staffEmail = "", record
       "";
     return fromRecord;
   };
+
   const finalName =
     staffName ||
     inferNameFromRecords(records) ||
@@ -283,26 +382,21 @@ export function exportStaffSalaryTable({ staffName = "", staffEmail = "", record
   }
 
   const rows = records.map((r, idx) => {
-    const period =
-      r.periodStart
-        ? new Date(r.periodStart).toLocaleString(undefined, { month: "long", year: "numeric" })
-        : "-";
-    const otHours =
-      (Number(r.otHoursWeekday || 0) + Number(r.otHoursHoliday || 0)) || 0;
-
+    const period = r.periodStart
+      ? new Date(r.periodStart).toLocaleString(undefined, {
+          month: "long",
+          year: "numeric",
+        })
+      : "-";
     const gross =
       Number(r.grossSalary ?? 0) ||
-      (Number(r.basicSalary || 0) +
-        Number(r.allowances || 0) +
-        Number(r.otWeekdayAmt || 0) +
-        Number(r.otHolidayAmt || 0));
+      Number(r.basicSalary || 0) + Number(r.allowances || 0);
 
     return [
       String(idx + 1).padStart(3, "0"),
       period,
       formatCurrency(gross),
       formatCurrency(r.netSalary),
-      `${otHours}h`,
       formatCurrency(r.epf || 0),
       formatCurrency(r.etf || 0),
       formatCurrency(r.loan || 0),
@@ -314,38 +408,16 @@ export function exportStaffSalaryTable({ staffName = "", staffEmail = "", record
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 18,
     margin: { left: 40, right: 40 },
-    head: [
-      ["No.", "Period", "Gross Pay", "Net Pay", "OT", "EPF", "ETF", "Loan", "Tax", "Created"],
-    ],
+    head: [["No.", "Period", "Gross", "Net", "EPF", "ETF", "Loan", "Tax", "Created"]],
     body: rows,
     styles: { fontSize: 9, cellPadding: 6 },
     headStyles: { fillColor: [24, 64, 228], textColor: 255, fontStyle: "bold" },
     theme: "grid",
     alternateRowStyles: { fillColor: [248, 250, 253] },
-    columnStyles: {
-      0: { cellWidth: 36, halign: "right" },
-      1: { cellWidth: 120 },
-      2: { cellWidth: 90, halign: "right" },
-      3: { cellWidth: 100, halign: "right", fontStyle: "bold" },
-      4: { cellWidth: 50, halign: "right" },
-      5: { cellWidth: 70, halign: "right" },
-      6: { cellWidth: 70, halign: "right" },
-      7: { cellWidth: 70, halign: "right" },
-      8: { cellWidth: 70, halign: "right" },
-      9: { cellWidth: 80 },
-    },
-    tableWidth: "auto",
   });
 
-  const periodHint =
-    records[0]?.periodStart &&
-    new Date(records[0].periodStart).toLocaleString(undefined, {
-      month: "long",
-      year: "numeric",
-    });
-
   doc.save(
-    `salary-history${periodHint ? "-" + periodHint : ""}-${new Date()
+    `salary-history-${finalName || "employee"}-${new Date()
       .toISOString()
       .slice(0, 10)}.pdf`
   );

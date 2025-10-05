@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+  import { Badge } from "@/components/ui/badge";
 import {
   DollarSign,
   TrendingUp,
@@ -37,11 +37,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const API_BASE = "http://localhost:5000/api";
+const OVERVIEW_URL = `${API_BASE}/finance/overview`;
+const EVENTS_URL = `${API_BASE}/finance/events`;
+// Owner-level salaries endpoint (all staff). Adjust if your API differs.
+const SALARIES_URL = `${API_BASE}/salaries`;
 
 // --- helpers ---
 const currency = (n) => formatCurrency(Number(n) || 0);
 
-// Normalize any backend string/number to a signed Rs format
+// Normalize any backend string/number to a signed Rs format for the UI feed
 const renderSignedAmount = (val) => {
   const s = String(val ?? "").trim();
   const isNeg = s.startsWith("-");
@@ -53,12 +57,13 @@ const renderSignedAmount = (val) => {
   return (isNeg ? "-" : "+") + out;
 };
 
-// Color green when positive, red when negative
+// Color green when positive, red when negative (UI only)
 const amountColor = (val) =>
   String(val ?? "").trim().startsWith("-") ? "text-red-500" : "text-green-500";
 
 export default function FinanceManagement() {
   const [data, setData] = useState(null);
+  const [salaryRecords, setSalaryRecords] = useState([]); // <— detailed salary rows for PDF
   const [isLoading, setLoading] = useState(true);
   const [isError, setError] = useState(false);
 
@@ -66,14 +71,38 @@ export default function FinanceManagement() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmt, setWithdrawAmt] = useState("");
 
-  // fetch overview
-  const fetchOverview = async () => {
+  // fetch overview + salaries concurrently
+  const fetchAll = async () => {
     try {
       setError(false);
-      const r = await fetch(`${API_BASE}/finance/overview`, { cache: "no-store" });
-      if (!r.ok) throw new Error("Failed to load overview");
-      const j = await r.json();
-      setData(j);
+      setLoading(true);
+
+      const [overviewRes, salariesRes] = await Promise.allSettled([
+        fetch(OVERVIEW_URL, { cache: "no-store" }).then((r) => {
+          if (!r.ok) throw new Error("Failed to load overview");
+          return r.json();
+        }),
+        axios
+          .get(SALARIES_URL, {
+            // If your API supports paging/date filters, add params here
+            params: { limit: 500 }, // keep reasonable
+          })
+          .then((r) => (Array.isArray(r.data) ? r.data : [])),
+      ]);
+
+      if (overviewRes.status === "fulfilled") {
+        setData(overviewRes.value);
+      } else {
+        throw overviewRes.reason || new Error("Overview failed");
+      }
+
+      if (salariesRes.status === "fulfilled") {
+        setSalaryRecords(salariesRes.value || []);
+      } else {
+        // not fatal for the page; PDF will still work with recent[]
+        setSalaryRecords([]);
+        console.warn("Salaries load skipped:", salariesRes.reason);
+      }
     } catch (e) {
       console.error(e);
       setError(true);
@@ -83,17 +112,23 @@ export default function FinanceManagement() {
     }
   };
 
-  // initial + live updates via SSE
+  // initial + live updates via SSE for overview; salaries can be refetched ad-hoc if needed
   useEffect(() => {
-    fetchOverview();
-    const src = new EventSource(`${API_BASE}/finance/events`);
-    src.addEventListener("finance", fetchOverview);
+    fetchAll();
+    const src = new EventSource(EVENTS_URL);
+    const onFinance = () => {
+      // Refresh just the overview quickly; keep salaries as last fetched
+      fetch(OVERVIEW_URL, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((j) => setData(j))
+        .catch(() => {/* ignore to keep UI stable */});
+    };
+    src.addEventListener("finance", onFinance);
     src.onerror = () => src.close();
     return () => {
-      src.removeEventListener("finance", fetchOverview);
+      src.removeEventListener("finance", onFinance);
       src.close();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totals = data?.totals || {};
@@ -109,6 +144,8 @@ export default function FinanceManagement() {
         totals,
         earnings,
         recent,
+        // include the detailed salary docs so the PDF prints the full landscape salary table
+        salaryRecords,
       });
     } catch (e) {
       console.error(e);
@@ -171,7 +208,7 @@ export default function FinanceManagement() {
             variant="outline"
             className="border-aqua/20 hover:bg-aqua/10"
             disabled={isLoading || isError || !data}
-            title="Export a full PDF report: totals, monthly earnings, and recent activity"
+            title="Export a full PDF report (overview, transactions, withdrawals, payments, and detailed salary runs)"
           >
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -279,7 +316,7 @@ export default function FinanceManagement() {
         </div>
       )}
 
-      {/* Monthly Earnings */}
+      {/* Monthly Earnings (UI keeps % for now) */}
       {!isLoading && !isError && (
         <Card className="animate-fade-in border-aqua/10">
           <CardHeader>
