@@ -97,7 +97,7 @@ const Checkout = () => {
 
   const paymentMethods = [
     { id: "card", name: "Credit/Debit Card", icon: CreditCard },
-    { id: "bank", name: "Bank Transfer", icon: Shield },
+    { id: "bank", name: "Cash on Delivery", icon: Shield },
   ];
 
   // Fetch cart data if not provided
@@ -1224,7 +1224,7 @@ const Checkout = () => {
               ) : (
                 <>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Confirm & Pay Rs. {tempOrderData?.total.toFixed(2)}
+                  Confirm Rs. {tempOrderData?.total.toFixed(2)}
                 </>
               )}
             </Button>
