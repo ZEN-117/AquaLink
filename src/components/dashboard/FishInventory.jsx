@@ -338,7 +338,7 @@ const InventoryPage = () => {
       if (!validateCategoryName(name)) {
         return toast.error("Category must start with a letter and contain only letters and numbers");
       }
-      if (isNaN(threshold) || threshold < 0) return toast.error("Threshold must be a number >= 0");
+      if (isNaN(threshold) || threshold < 10) return toast.error("Low Stock Threshold must be at least 10");
 
       // Check if category already exists
       if (categories.some(c => c.name === name)) {
@@ -802,7 +802,7 @@ const InventoryPage = () => {
                     <Input 
                       id="newCategoryThreshold"
                       type="number" 
-                      min="0" 
+                      min="10" 
                       value={newCategoryThreshold} 
                       onChange={(e) => setNewCategoryThreshold(e.target.value)} 
                     />
@@ -810,8 +810,8 @@ const InventoryPage = () => {
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <p className="text-s text-muted-foreground">
-                    Category Must Start With a letter.
-                  </p>
+                    Category must start with a letter. <br></br>Low Stock Threshold must be at least 10.                  
+                    </p>
                   <Button 
                     type="button" 
                     onClick={handleAddCategory} 
