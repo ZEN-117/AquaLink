@@ -1,3 +1,4 @@
+// src/services/userService.js
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -19,9 +20,7 @@ userApi.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Add response interceptor for error handling
@@ -112,6 +111,18 @@ export const userService = {
     const response = await userApi.post('/users/bulk-role', { userIds, role });
     return response.data;
   },
+
+  changePassword: async ({ email, currentPassword, newPassword }) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(
+      "http://localhost:5000/api/users/change-password",
+      { email, currentPassword, newPassword },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
 };
 
 export default userService;
+

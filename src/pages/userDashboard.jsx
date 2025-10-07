@@ -43,7 +43,7 @@ const UserDashboard = () => {
           <main className="flex-1 overflow-auto">
             <div className="p-6 animate-fade-in">
               <Routes>
-                <Route index element={<DashboardOverview />} />
+                <Route index element={<UserProfile />} />
                 <Route path="orders" element={<Orders />} />
                 <Route path="profile" element={<UserProfile />} />
               </Routes>
