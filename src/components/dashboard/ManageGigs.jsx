@@ -29,6 +29,7 @@ const ManageGigs = () => {
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [fishStocks, setFishStocks] = useState([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -65,9 +66,18 @@ const ManageGigs = () => {
     }
   };
 
+  // Fetch all data and set loading state
+  const fetchAllData = async () => {
+    setIsDataLoaded(false);
+    try {
+      await Promise.all([fetchProducts(), fetchFishStocks()]);
+    } finally {
+      setIsDataLoaded(true);
+    }
+  };
+
   useEffect(() => {
-    fetchProducts();
-    fetchFishStocks();
+    fetchAllData();
   }, []);
 
   // Poll fish stock periodically to reflect real-time changes in displayed gig stock
@@ -205,9 +215,10 @@ const handleFishSelect = (fishCode) => {
   };
 
 const getCurrentStockForGig = (gig) => {
+  if (!isDataLoaded) return null; // Return null while data is loading
   const matched = fishStocks.find((f) => f.fishCode === gig.fishCode);
   if (matched && typeof matched.stock === "number") return matched.stock;
-  return gig.stock;
+  return gig.stock || 0;
 };
 
 const handleExportPDF = async () => {
@@ -367,10 +378,18 @@ const handleExportPDF = async () => {
 
       {/* Products */}
       <div className="space-y-4">
-        <div className="grid gap-4">
-          {products
-            .filter((p) => p.title.toLowerCase().includes(searchTerm.toLowerCase()))
-            .map((gig) => (
+        {!isDataLoaded ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aqua mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading gigs...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {products
+              .filter((p) => p.title.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((gig) => (
               <Card key={gig._id} className="hover-scale animate-fade-in border-aqua/10">
                 <CardContent className="p-6 flex justify-between items-center">
                   <div className="flex items-center space-x-4">
@@ -387,15 +406,21 @@ const handleExportPDF = async () => {
                         <span className="text-lg font-bold text-aqua">
                           Rs. {gig.price.toFixed(2)}
                         </span>
-                        <Badge
-                          className={getStatusColor(getCurrentStockForGig(gig) > 0 ? "In Stock" : "Out of Stock")}
-                        >
-                          {getCurrentStockForGig(gig) > 0 ? "In Stock" : "Out of Stock"}
-                        </Badge>
+                        {isDataLoaded ? (
+                          <Badge
+                            className={getStatusColor(getCurrentStockForGig(gig) > 0 ? "In Stock" : "Out of Stock")}
+                          >
+                            {getCurrentStockForGig(gig) > 0 ? "In Stock" : "Out of Stock"}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-gray-500/10 text-gray-500">
+                            Loading...
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                         <span>Code: {gig.productCode}</span>
-                        <span>Stock: {getCurrentStockForGig(gig)}</span>
+                        <span>Stock: {isDataLoaded ? getCurrentStockForGig(gig) : "..."}</span>
                       </div>
                     </div>
                   </div>
@@ -420,7 +445,8 @@ const handleExportPDF = async () => {
                 </CardContent>
               </Card>
             ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
