@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   MessageSquare, 
   Star, 
@@ -27,15 +29,21 @@ const FeedbackManagement = () => {
   const [loading, setLoading] = useState(true);
   const [testimonials, setTestimonials] = useState([]);
   const { toast } = useToast();
+  const { token, isAuthenticated, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Wait for auth to initialize so refresh doesn't run without token
+    if (authLoading) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     fetchFeedbacks();
     fetchTestimonials();
-  }, []);
+  }, [token, authLoading]);
 
   const fetchFeedbacks = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/feedback/all`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -57,7 +65,6 @@ const FeedbackManagement = () => {
 
   const fetchTestimonials = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/feedback/testimonials`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -169,10 +176,69 @@ const FeedbackManagement = () => {
     ));
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-80 mt-2" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div>
+                      <Skeleton className="h-5 w-40" />
+                      <Skeleton className="h-4 w-56 mt-2" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-40" />
+                </div>
+                <div className="flex items-center gap-2 pt-4 border-t">
+                  <Skeleton className="h-8 w-40" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !token) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Feedback Management</h1>
+            <p className="text-muted-foreground mt-1">Please sign in to view feedbacks.</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            You must be logged in to view this page.
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -14,26 +14,6 @@ const menuItems = [
     url: "/admindashboard/stock", 
     icon: BarChart3,
   },
-  { 
-    title: "Security Settings", 
-    url: "/admindashboard/security", 
-    icon: Shield,
-  },
-  { 
-    title: "System Analytics", 
-    url: "/admindashboard/analytics", 
-    icon: BarChart3,
-  },
-  { 
-    title: "Content Management", 
-    url: "/admindashboard/content", 
-    icon: FileText,
-  },
-  { 
-    title: "Profile", 
-    url: "/admindashboard/profile", 
-    icon: User,
-  },
 ];
 
 export function AdminAppSidebar() {
