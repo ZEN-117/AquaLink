@@ -231,32 +231,63 @@ export default function SalaryManagement() {
                 <Label>Basic Salary</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.basicSalary}
-                  onChange={(e) => setForm({ ...form, basicSalary: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, basicSalary: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Allowances</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.allowances}
-                  onChange={(e) => setForm({ ...form, allowances: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, allowances: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label>OT Hours (Weekday/Sat)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  onKeyDown={(e) => { if (["e","E","+","-","."].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.otHoursWeekday}
-                  onChange={(e) => setForm({ ...form, otHoursWeekday: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, otHoursWeekday: v === "" ? "" : Math.max(0, Math.floor(Number(v))) });
+                  }}
                 />
+
               </div>
               <div className="space-y-2">
                 <Label>OT Hours (Sun/Holiday)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  step="1"
+                  inputMode="numeric"
+                  onKeyDown={(e) => { if (["e","E","+","-","."].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.otHoursHoliday}
-                  onChange={(e) => setForm({ ...form, otHoursHoliday: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, otHoursHoliday: v === "" ? "" : Math.max(0, Math.floor(Number(v)))});
+                  }}
                 />
               </div>
             </div>
@@ -285,9 +316,16 @@ export default function SalaryManagement() {
                 <Label>EPF ({EPF_RATE * 100}%)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.epf}
                   readOnly={autoContrib}
-                  onChange={(e) => setForm({ ...form, epf: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, epf: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                   className={autoContrib ? "opacity-70 cursor-not-allowed" : ""}
                 />
               </div>
@@ -295,9 +333,16 @@ export default function SalaryManagement() {
                 <Label>ETF ({ETF_RATE * 100}%)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.etf}
                   readOnly={autoContrib}
-                  onChange={(e) => setForm({ ...form, etf: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, etf: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                   className={autoContrib ? "opacity-70 cursor-not-allowed" : ""}
                 />
               </div>
@@ -305,16 +350,30 @@ export default function SalaryManagement() {
                 <Label>Loan</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.loan}
-                  onChange={(e) => setForm({ ...form, loan: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, loan: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Tax</Label>
                 <Input
                   type="number"
+                  min={0}
+                  inputMode="decimal"
+                  onKeyDown={(e) => { if (["e","E","+","-"].includes(e.key)) e.preventDefault(); }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={form.tax}
-                  onChange={(e) => setForm({ ...form, tax: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, tax: v === "" ? "" : Math.max(0, Number(v)) });
+                  }}
                 />
               </div>
             </div>

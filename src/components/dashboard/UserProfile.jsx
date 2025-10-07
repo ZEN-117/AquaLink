@@ -147,27 +147,7 @@ const handleChangePassword = () => {
   setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
 };
 
-
-
-  const downloadReport = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/users/report", {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob",
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "User_Management_Report.pdf");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to download report");
-    }
-  };
+  
 
   if (!user) {
     return (
@@ -197,12 +177,7 @@ const handleChangePassword = () => {
         <p className="text-muted-foreground">
           Manage your account settings and security preferences
         </p>
-        <Button
-          onClick={downloadReport}
-          className="bg-gradient-to-r from-primary to-black text-white hover:opacity-90 transition-all duration-300 hover:scale-105"
-        >
-          Export User Report
-        </Button>
+        
       </div>
 
       {/* Profile and Account Settings */}

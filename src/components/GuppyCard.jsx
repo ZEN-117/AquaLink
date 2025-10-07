@@ -39,12 +39,6 @@ const GuppyCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Rarity Badge */}
-      <div className="absolute top-3 left-3 z-10">
-        <Badge className={`${rarityColors[rarity]} font-medium text-xs px-2 py-1`}>
-          {rarity}
-        </Badge>
-      </div>
 
       {/* Favorite Button */}
       <button
@@ -97,10 +91,6 @@ const GuppyCard = ({
 
         {/* Content */}
         <div className="p-6">
-          {/* Category */}
-          <p className="text-sm text-muted-foreground mb-2 uppercase tracking-wide">
-            {category}
-          </p>
 
           {/* Product Code */}
           {productCode && (
@@ -114,24 +104,7 @@ const GuppyCard = ({
             {name}
           </h3>
 
-          {/* Rating */}
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < Math.floor(rating)
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-muted-foreground"
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {rating} ({reviews} reviews)
-            </span>
-          </div>
+          
 
           {/* Features */}
           <div className="mb-4">

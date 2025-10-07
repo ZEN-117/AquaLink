@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "@/contexts/AuthContext";
 import {Card, CardContent, CardHeader, CardTitle,} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
@@ -9,9 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} f
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Download } from "lucide-react";
+import { toast } from "sonner";
+import { exportUsersPDF } from "@/lib/exportUsersPDF";
 
 const UserManagement = () => {
+  const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -35,6 +39,19 @@ const UserManagement = () => {
     };
     fetchUsers();
   }, []);
+
+  const downloadReport = async () => {
+    try {
+      if (!users || users.length === 0) {
+        toast.info("No users to export");
+        return;
+      }
+      await exportUsersPDF(users);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to export report");
+    }
+  };
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
@@ -93,7 +110,15 @@ const UserManagement = () => {
     <div className="space-y-6">
       <Card className="border-aqua/10">
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <div className="flex items-center justify-between gap-4">
+            <CardTitle>User Management</CardTitle>
+            <Button
+              onClick={downloadReport}
+              className="bg-gradient-to-r from-primary to-black text-white hover:opacity-90"
+            >
+              <Download className="h-4 w-4 mr-2" /> Export User Report
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (

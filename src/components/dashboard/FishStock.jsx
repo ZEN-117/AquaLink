@@ -57,9 +57,30 @@ const FishStock = () => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
+    let nextValue = value;
+
+    // Sanitize title: allow letters, numbers, spaces, and hyphens only
+    if (id === "title") {
+      nextValue = value.replace(/[^a-zA-Z0-9\s-]/g, "");
+      // Collapse multiple spaces
+      nextValue = nextValue.replace(/\s+/g, " ");
+    }
+
+    // Sanitize fishCode: disallow symbols like '@' and keep only letters, numbers, spaces, and hyphens
+    if (id === "fishCode") {
+      nextValue = value.replace(/[^a-zA-Z0-9\s-]/g, "");
+      nextValue = nextValue.replace(/\s+/g, " ");
+    }
+
+    // Ensure stock is non-negative number
+    if (id === "stock") {
+      const n = Number(value);
+      nextValue = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [id]: id === "stock" ? Number(value) : value,
+      [id]: nextValue,
     }));
   };
 

@@ -94,7 +94,28 @@ const InventoryHistory = () => {
     const matchesUser = userFilter === "all" || item.user === userFilter;
     
     const matchesDate = dateFilter === "" || 
-      new Date(item.dateTime).toISOString().split('T')[0] === dateFilter;
+      (() => {
+        const itemDate = new Date(item.dateTime);
+        const filterDate = new Date(dateFilter);
+        
+        // Debug logging
+        if (dateFilter) {
+          console.log('Date Filter Debug:', {
+            filterDate: dateFilter,
+            itemDateTime: item.dateTime,
+            itemDate: itemDate.toDateString(),
+            filterDateObj: filterDate.toDateString(),
+            matches: itemDate.getFullYear() === filterDate.getFullYear() &&
+                    itemDate.getMonth() === filterDate.getMonth() &&
+                    itemDate.getDate() === filterDate.getDate()
+          });
+        }
+        
+        // Compare dates only (ignore time)
+        return itemDate.getFullYear() === filterDate.getFullYear() &&
+               itemDate.getMonth() === filterDate.getMonth() &&
+               itemDate.getDate() === filterDate.getDate();
+      })();
     
     return matchesSearch && matchesAction && matchesUser && matchesDate;
   });
@@ -113,7 +134,28 @@ const InventoryHistory = () => {
     const matchesUser = assignedUserFilter === "all" || item.user === assignedUserFilter;
     
     const matchesDate = assignedDateFilter === "" || 
-      new Date(item.dateTime).toISOString().split('T')[0] === assignedDateFilter;
+      (() => {
+        const itemDate = new Date(item.dateTime);
+        const filterDate = new Date(assignedDateFilter);
+        
+        // Debug logging
+        if (assignedDateFilter) {
+          console.log('Assigned Date Filter Debug:', {
+            filterDate: assignedDateFilter,
+            itemDateTime: item.dateTime,
+            itemDate: itemDate.toDateString(),
+            filterDateObj: filterDate.toDateString(),
+            matches: itemDate.getFullYear() === filterDate.getFullYear() &&
+                    itemDate.getMonth() === filterDate.getMonth() &&
+                    itemDate.getDate() === filterDate.getDate()
+          });
+        }
+        
+        // Compare dates only (ignore time)
+        return itemDate.getFullYear() === filterDate.getFullYear() &&
+               itemDate.getMonth() === filterDate.getMonth() &&
+               itemDate.getDate() === filterDate.getDate();
+      })();
     
     return matchesSearch && matchesSection && matchesUser && matchesDate;
   });
@@ -393,9 +435,10 @@ const InventoryHistory = () => {
                   type="date" 
                   value={dateFilter} 
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="text-sm"
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="Select date"
                 />
-            </div>
+              </div>
 
               {/* Clear Filters */}
               <Button 
@@ -589,7 +632,8 @@ const InventoryHistory = () => {
                   type="date" 
                   value={assignedDateFilter} 
                   onChange={(e) => setAssignedDateFilter(e.target.value)}
-                  className="text-sm"
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="Select date"
                 />
               </div>
 

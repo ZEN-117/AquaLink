@@ -97,9 +97,17 @@ const ManageGigs = () => {
   // Handle input change
   const handleInputChange = (e) => {
     const { id, value } = e.target;
+    let nextValue = value;
+
+    // Sanitize Product Code: allow letters, numbers, spaces, and hyphens only
+    if (id === "productCode") {
+      nextValue = value.replace(/[^a-zA-Z0-9\s-]/g, "");
+      nextValue = nextValue.replace(/\s+/g, " ");
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [id]: id === "price" ? Number(value) : value,
+      [id]: id === "price" ? Number(nextValue) : nextValue,
     }));
   };
 

@@ -50,22 +50,7 @@ const DashboardOverview = () => {
       color: "text-blue-500",
       bgColor: "bg-blue-500/10"
     },
-    {
-      title: "Total Earnings",
-      value: "Rs. 2,840",
-      description: "This month",
-      icon: DollarSign,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10"
-    },
-    {
-      title: "Growth Rate",
-      value: "+24%",
-      description: "vs last month",
-      icon: TrendingUp,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-500/10"
-    }
+    
   ];
 
   const recentActivity = [
