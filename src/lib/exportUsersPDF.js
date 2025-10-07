@@ -17,7 +17,6 @@ export const exportUsersPDF = async (users = []) => {
       index + 1,
       `${(u.firstName || "").trim()} ${(u.lastName || "").trim()}`.trim(),
       u.email || "",
-      u.phone || "",
       u.role || "",
       u.isBlocked ? "Inactive" : "Active",
       u.isEmailVerified ? "Yes" : "No",
@@ -25,7 +24,7 @@ export const exportUsersPDF = async (users = []) => {
 
     autoTable(doc, {
       startY: 40,
-      head: [["#", "Name", "Email", "Phone", "Role", "Status", "Email Verified"]],
+      head: [["#", "Name", "Email", "Role", "Status", "Email Verified"]],
       body: tableRows,
       theme: "grid",
       headStyles: { fillColor: [33, 150, 243], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 10 },
@@ -33,12 +32,11 @@ export const exportUsersPDF = async (users = []) => {
       alternateRowStyles: { fillColor: [248, 249, 250] },
       columnStyles: {
         0: { cellWidth: 10 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 45 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 55 },
         3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 25 },
+        4: { cellWidth: 25 },
+        5: { cellWidth: 30 },
       },
       margin: { left: 15, right: 15 },
     });
