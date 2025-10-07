@@ -219,3 +219,4 @@ If migrating from a single inventory history table:
 - **Data export**: Secure export functionality
 
 This separated table system provides a more organized, efficient, and user-friendly approach to inventory tracking while maintaining all the functionality of the original system.
+

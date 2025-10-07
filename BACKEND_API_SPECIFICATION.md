@@ -192,3 +192,4 @@ The frontend expects these specific field names and formats:
 - `newStock`: Number
 
 Make sure your backend API matches these exact field names and data types.
+
