@@ -561,7 +561,7 @@ export default function FinanceManagement() {
                     <div className={`text-lg font-bold ${amountColor(row.amount)}`}>
                       {renderSignedAmount(row.amount)}
                     </div>
-                    <p className="text-xs text-muted-foreground">{row.id}</p>
+                    {/* Removed the garbage ID display below */}
                   </div>
                 </div>
               ))}
