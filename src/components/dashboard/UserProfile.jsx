@@ -208,7 +208,7 @@ const handleChangePassword = () => {
               <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-aqua" /> Member since {getMemberSince()}</div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Badge className={user.isEmailVerified ? "bg-green-600" : "bg-yellow-600"}>
+              <Badge className={user.isEmailVerified ? "bg-blue-600" : "bg-yellow-600"}>
                 {user.isEmailVerified ? "Email Verified" : "Not Verified"}
               </Badge>
               <Badge className={user.role === "admin" ? "bg-red-600" : "bg-primary"}>
